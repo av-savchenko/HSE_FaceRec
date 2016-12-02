@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/images">
+        <file alias="imgAdd.png">images/imgAdd.png</file>
+    </qresource>
+    <qresource prefix="/">
+        <file>lbpcascade_frontalface.xml</file>
+        <file>caffe_models/LCNN_prediction.prototxt</file>
+        <file>caffe_models/LCNN.caffemodel</file>
+    </qresource>
+</RCC>
