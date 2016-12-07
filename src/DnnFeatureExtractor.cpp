@@ -38,7 +38,8 @@ DnnFeatureExtractorImpl::DnnFeatureExtractorImpl(){
     net_.reset(new Net<float>(tmp_proto->fileName().toStdString().c_str(), TEST));
     delete tmp_proto;
 
-    QFile f_model(":/caffe_models/LCNN.caffemodel");
+    //QFile f_model(":/caffe_models/LCNN.caffemodel");
+    QFile f_model(":/caffe_models/LCNN_C.caffemodel");
     QTemporaryFile* tmp_model=QTemporaryFile::createNativeFile(f_model);
     tmp_model->setAutoRemove(true);
     net_->CopyTrainedLayersFrom(tmp_model->fileName().toStdString().c_str());
