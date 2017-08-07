@@ -1,14 +1,14 @@
 #ifndef DB_H
 #define DB_H
 
-#define USE_LCNN
+//#define USE_LCNN
 #ifndef USE_LCNN
-#define USE_VGG
+//#define USE_VGG
 #endif
 
-#define USE_LFW
+//#define USE_LFW
 //#define USE_CASIA
-//#define USE_CALTECH
+#define USE_CALTECH
 
 static const char* PCA_CASIA_FEATURES_FILE_NAME ="casia_dnn_features_my_best_pca.txt";
 
@@ -25,11 +25,15 @@ static const char* PCA_FEATURES_FILE_NAME =
 #else
 #ifdef USE_CALTECH
 #ifdef USE_VGG
-        "dnn_101_vgg19_last_mean.txt";
+        //"dnn_101_vgg19_last_mean.txt";
         //"dnn_101_vgg19_img_resized_fc6.txt";
+        //"birds_vgg19_fc6.txt";
+        "dogs_dnn_vgg19_features_mean_fc7.txt";
 #else
         "dnn_101_googlenet.txt";
         //"dnn_256_googlenet.txt";
+        //"birds_googlenet.txt";
+        //"dogs_dnn_googlenet.txt";
 #endif
 #else
         "lfw_dnn_vgg_features_noscale_pca.txt";
@@ -56,7 +60,7 @@ PCA_FEATURES_FILE_NAME;
 
 const double FRACTION =
 #ifdef USE_CALTECH
-        0.1;
+        0.03;//0.1;
 #elif defined(USE_LFW)
         0.5;
 #else

@@ -10,6 +10,7 @@ CONFIG -= app_bundle
 
 DEFINES += QT_BUILD
 
+#SETUP CORRECT PATH TO OPENCV AND NonMetricSpaceLib!!!
 INCLUDEPATH += /usr/local/Cellar/opencv3/3.0.0/include/ /Users/avsavchenko/Documents/my_soft/github/nmslib/similarity_search/include/
 LIBS += -L/usr/local/Cellar/opencv3/3.0.0/lib \
     -L/usr/lib \#-L/usr/local/lib \
