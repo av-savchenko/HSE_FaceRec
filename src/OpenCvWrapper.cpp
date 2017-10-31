@@ -5,9 +5,26 @@
 
 #include <opencv2/highgui/highgui.hpp>
 using namespace cv;
+
+#ifdef USE_DLIB_DETECTOR
+#include <dlib/image_processing/frontal_face_detector.h>
+//#include <dlib/image_processing/render_face_detections.h>
+#include <dlib/image_processing.h>
+#include <dlib/opencv.h>
+using namespace dlib;
+
+static frontal_face_detector detector = get_frontal_face_detector();
+#endif
+
 OpenCvWrapper::OpenCvWrapper()
 {   
-    QFile f_cascade(":/lbpcascade_frontalface.xml");
+#ifndef USE_DLIB_DETECTOR
+    loadCascade(face_cascade,":/lbpcascade_frontalface.xml");
+    loadCascade(eye_cascade,":/haarcascade_eye.xml");
+#endif
+}
+void OpenCvWrapper::loadCascade(cv::CascadeClassifier& cascade, const char* filename){
+    QFile f_cascade(filename);
     QTemporaryFile* tmp_cascade=QTemporaryFile::createNativeFile(f_cascade);
     tmp_cascade->setAutoRemove(true);
     qDebug()<<tmp_cascade->fileName();
@@ -19,11 +36,12 @@ OpenCvWrapper::OpenCvWrapper()
                 //"C:/Users/Andrey/Documents/faces/face_rec_new_1/lbpcascade_profileface.xml"
                 //"C:/Users/Andrey/Documents/faces/face_rec_new_1/haarcascade_frontalface_default.xml"
                 ) )
-        qDebug()<<"--(!)Error loading\n";
+        qDebug()<<"--(!)Error loading "<<filename;
     else
         qDebug()<<"ok";
     delete tmp_cascade;
 }
+
 OpenCvWrapper& OpenCvWrapper::Instance(){
     static OpenCvWrapper* openCvWrapper=0;
     if(!openCvWrapper){
@@ -80,7 +98,38 @@ QVector<QRect> OpenCvWrapper::detectFaceRects(const Mat&/*IplImage* */img,  bool
     }
     /*cvReleaseImage( &gray );
     cvReleaseImage( &small_img );*/
+#elif defined (USE_DLIB_DETECTOR)
+    QTime myTimer;myTimer.start();
+    Mat img_small;
+    qDebug()<<"chan="<<img.channels();
+    if(img.channels()==4){
+        Mat img3chan;
+        cvtColor( img, img3chan, CV_BGRA2BGR );
+        resize( img3chan, img_small,Size( round (img.cols/scale),
+                                          round (img.rows/scale)) );
 
+    }
+    else
+        resize( img, img_small,Size( round (img.cols/scale),
+                                      round (img.rows/scale)) );
+
+    cv_image<bgr_pixel> cimg(img_small);
+
+    std::vector<dlib::rectangle> faces = detector(cimg);
+    QVector<QRect> faceRects;
+    for (unsigned long i = 0; i < faces.size(); ++i){
+        dlib::rectangle& r = faces[i];
+        int x=(int)(scale*r.left());
+        int y=(int)(scale*r.top());
+        int w=(int)(scale*r.width());
+        int h=(int)(scale*r.height());
+        //qDebug()<<w;
+        if(w>100)
+            faceRects.push_back(QRect(x+w/8,y-h/8,w*3/4,h*5/4));
+        else
+            faceRects.push_back(QRect(x,y,w,h));
+    }
+    qDebug()<<"total elapsed"<<myTimer.elapsed();
 #else
     //QTime myTimer;myTimer.start();
     Mat matImage=img;//cv::cvarrToMat(img);
@@ -93,7 +142,7 @@ QVector<QRect> OpenCvWrapper::detectFaceRects(const Mat&/*IplImage* */img,  bool
     std::vector<Rect> faces;
     QVector<QRect> faceRects;
 #if 1
-    cascade.detectMultiScale( img_small, faces,
+    face_cascade.detectMultiScale( img_small, faces,
                               1.3, 2, (oneFace?CASCADE_FIND_BIGGEST_OBJECT:0)
                               |CASCADE_DO_ROUGH_SEARCH
                               /*|CASCADE_DO_CANNY_PRUNING*/
@@ -128,6 +177,18 @@ QVector<QRect> OpenCvWrapper::detectFaceRects(const Mat&/*IplImage* */img,  bool
         /*if(levelWeights[i]<0)
             continue;*/
         Rect& r = faces[i];
+#if 1
+        std::vector<Rect> eyes;
+        cv::Mat faceROI = img_small(r);
+        eye_cascade.detectMultiScale( faceROI, eyes,
+                                  1.1, 2, CASCADE_DO_ROUGH_SEARCH
+                                  /*|CASCADE_DO_CANNY_PRUNING*/
+                                  |CASCADE_SCALE_IMAGE
+                                  ,
+                                  Size(30, 30));
+        if(eyes.empty())
+            continue;
+#endif
         r.x = (int)((double)r.x * scale);
         r.y = (int)((double)r.y * scale);
         r.width = (int)((double)r.width * scale);

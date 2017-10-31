@@ -195,6 +195,7 @@ void RecMainWindow::timerEvent(QTimerEvent*) {
         FaceImage* face=db.getClosest(inputImage,&dist,&distDiff);
         if(face!=0){
             QString closestPersonName=face->personName;
+            qDebug()<<closestPersonName<<" age:"<<inputImage->detect_age();
 
             //if(dist<DISTANCE_THRESHOLD)
             if((dist<DISTANCE_THRESHOLD) || (dist<MAX_DISTANCE_FOR_DIFF_THRESHOLD && distDiff>=DISTANCE_DIFF_THRESHOLD))

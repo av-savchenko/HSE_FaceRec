@@ -41,6 +41,10 @@ public:
         return &featureVector[0];
     }
 
+    const char* age;
+    const char* detect_age(){
+        return age;
+    }
 #else
 #if defined (USE_GRADIENT_ANGLE)
     static const int HISTO_SIZE=8;

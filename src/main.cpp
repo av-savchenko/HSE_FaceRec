@@ -23,8 +23,8 @@ int main(int argc, char **argv) {
     if(locale=="ru_RU"){
         qDebug()<<translator.load("faces_ru.qm",".");
         app.installTranslator(&translator);
-    }
-    qDebug()<<QDir::currentPath();*/
+    }*/
+    qDebug()<<QDir::currentPath();
 
     RecMainWindow *mainWin = new RecMainWindow();
     mainWin->setWindowTitle(QObject::tr("HSE Face recognition"));

@@ -9,16 +9,10 @@
 #include <QRect>
 #include <QVector>
 
+#define USE_DLIB_DETECTOR
+
 class OpenCvWrapper
 {
-private:
-    cv::CascadeClassifier  cascade;
-    //CvMemStorage* storage;
-
-    OpenCvWrapper();
-    OpenCvWrapper(const OpenCvWrapper&);
-    OpenCvWrapper& operator=(const OpenCvWrapper&);
-
 public:
     static OpenCvWrapper& Instance();
     QVector<QRect> detectFaceRects(const cv::Mat&/*IplImage**/, bool oneFace=false);
@@ -31,6 +25,16 @@ public:
     };
 
     QImage putFilter(QImage* srcImage, FilterType filterType, int level=1);
+private:
+    OpenCvWrapper();
+    OpenCvWrapper(const OpenCvWrapper&);
+    OpenCvWrapper& operator=(const OpenCvWrapper&);
+#ifdef USE_DLIB_DETECTOR
+    cv::CascadeClassifier  face_cascade,eye_cascade;
+#endif
+    void loadCascade(cv::CascadeClassifier& cascade, const char* filename);
+    //CvMemStorage* storage;
+
 };
 
 #endif // OPENCVWRAPPER_H

@@ -155,7 +155,8 @@ FaceImage::FaceImage(const QImage* image,const QString& pName,const QString& fNa
         //image(img->copy(img->width()/8,img->height()/8,img->width()*7/8,img->height()*7/8)),
         personName(pName),
         fileName(fName),
-        isUnrec(isUnrecAdded)
+        isUnrec(isUnrecAdded),
+        age("")
 {
     if(image->isNull())
         return;
@@ -199,7 +200,7 @@ FaceImage::FaceImage(const QImage* image,const QString& pName,const QString& fNa
     delete[] pixels;
 }
 FaceImage::FaceImage(cv::Mat& image,const QString& pName):
-        personName(pName)
+        personName(pName),age("")
 {
     /*int i,j,k;
 
@@ -305,6 +306,9 @@ void FaceImage::init(cv::Mat& image, int *pixels, int width, int height){
     cv::medianBlur(dst1, dst2, 3);
     featureVector.resize(FEATURES_COUNT);
     DnnFeatureExtractor::GetInstance()->extractFeatures(dst2, &featureVector[0]);
+#ifdef DETECT_AGE
+    age=DnnFeatureExtractor::GetInstance()->detect_age(dst2);
+#endif
 #else
     //segmentGamma(pixels,width,height,COLORS_COUNT);
     segmentGamma(pixels,width,height,1);

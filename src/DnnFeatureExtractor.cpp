@@ -20,7 +20,7 @@ using namespace caffe;
 
 struct DnnFeatureExtractorImpl{
 public:
-	DnnFeatureExtractorImpl();
+    DnnFeatureExtractorImpl(bool faces_features=true);
 	std::shared_ptr<caffe::Net<float> > net_;
 	cv::Size input_geometry_;
 	int num_channels_;
@@ -28,29 +28,36 @@ public:
 	boost::shared_ptr<caffe::MemoryDataLayer<float>> input_layer_;
 };
 
-DnnFeatureExtractorImpl::DnnFeatureExtractorImpl(){
+DnnFeatureExtractorImpl::DnnFeatureExtractorImpl(bool faces_features){
     FLAGS_minloglevel = 3;
 	Caffe::set_mode(Caffe::CPU);
 
-    QFile f_proto(":/caffe_models/LCNN_prediction.prototxt");
-    QTemporaryFile* tmp_proto=QTemporaryFile::createNativeFile(f_proto);
-    tmp_proto->setAutoRemove(true);
-    net_.reset(new Net<float>(tmp_proto->fileName().toStdString().c_str(), TEST));
-    delete tmp_proto;
+    string feature_blob_name;
+    if(faces_features){
+        QFile f_proto(":/caffe_models/LCNN_prediction.prototxt");
+        QTemporaryFile* tmp_proto=QTemporaryFile::createNativeFile(f_proto);
+        tmp_proto->setAutoRemove(true);
+        net_.reset(new Net<float>(tmp_proto->fileName().toStdString().c_str(), TEST));
+        delete tmp_proto;
 
-    //QFile f_model(":/caffe_models/LCNN.caffemodel");
-    QFile f_model(":/caffe_models/LCNN_C.caffemodel");
-    QTemporaryFile* tmp_model=QTemporaryFile::createNativeFile(f_model);
-    tmp_model->setAutoRemove(true);
-    net_->CopyTrainedLayersFrom(tmp_model->fileName().toStdString().c_str());
-    delete tmp_model;
-    const string feature_blob_name="eltwise_fc1";
-
+        //QFile f_model(":/caffe_models/LCNN.caffemodel");
+        QFile f_model(":/caffe_models/LCNN_C.caffemodel");
+        QTemporaryFile* tmp_model=QTemporaryFile::createNativeFile(f_model);
+        tmp_model->setAutoRemove(true);
+        net_->CopyTrainedLayersFrom(tmp_model->fileName().toStdString().c_str());
+        delete tmp_model;
+        feature_blob_name="eltwise_fc1";
+    }
+    else{
+        net_.reset(new Net<float>("/Users/avsavchenko/Documents/my_soft/github/HSE_FaceRec/adience/LightenedCNN_C_adience_deploy.prototxt", TEST));
+        net_->CopyTrainedLayersFrom("/Users/avsavchenko/Documents/my_soft/github/HSE_FaceRec/adience/LCNN_C_adience.caffemodel");
+        feature_blob_name="fc2_ms_new";
+    }
 	input_layer_ = boost::dynamic_pointer_cast<caffe::MemoryDataLayer<float>>(net_->layers()[0]);
 	num_channels_ = input_layer_->channels();
 	input_geometry_ = cv::Size(input_layer_->width(), input_layer_->height());
     feature_blob_ = net_->blob_by_name(feature_blob_name);
-    //cout << input_geometry_.width << ' ' << input_geometry_.height << ' ' << feature_blob->count() << " hi!!\n";
+    qDebug()  << input_geometry_.width << ' ' << input_geometry_.height << ' ' << feature_blob_->count();
 }
 DnnFeatureExtractor* DnnFeatureExtractor::GetInstance(){
 	static DnnFeatureExtractor fd;
@@ -58,7 +65,11 @@ DnnFeatureExtractor* DnnFeatureExtractor::GetInstance(){
 }
 DnnFeatureExtractor::DnnFeatureExtractor()
 {
-	impl = new DnnFeatureExtractorImpl();
+    impl = new DnnFeatureExtractorImpl();
+#ifdef DETECT_AGE
+    age_detect_impl = new DnnFeatureExtractorImpl(false);
+#endif
+
 }
 DnnFeatureExtractor::~DnnFeatureExtractor(){
 	delete impl;
@@ -67,16 +78,22 @@ void DnnFeatureExtractor::extractFeatures(std::string fileName, float* features)
 {
 	cv::Mat grey_image = cv::imread(fileName, cv::IMREAD_GRAYSCALE);
 	if (!grey_image.data) {
-		std::cout << "Could not open or find input file.\n";
+        qDebug() << "Could not open or find input file";
 		return;
 	}
 	extractFeatures(grey_image, features);
 }
-void DnnFeatureExtractor::extractFeatures(cv::Mat& grey_image, float* features){
+void DnnFeatureExtractor::extractFeatures(cv::Mat& grey_image, float* features, bool faces_features){
 	cv::Mat img_resized;
-	cv::resize(grey_image, img_resized, impl->input_geometry_);
+    DnnFeatureExtractorImpl* cur_impl=impl;
+ #ifdef DETECT_AGE
+    if(!faces_features)
+        cur_impl=age_detect_impl;
+#endif
+
+    cv::resize(grey_image, img_resized, cur_impl->input_geometry_);
 #if 0
-	Blob<float>* input_layer = impl->net_->input_blobs()[0];
+    Blob<float>* input_layer = cur_impl->net_->input_blobs()[0];
 	caffe::Datum* datum = new caffe::Datum();
 	CVMatToDatum(img_resized, datum);
 	caffe::Blob<float>* input_blob = new caffe::Blob<float>(1, datum->channels(), datum->height(), datum->width());
@@ -99,20 +116,40 @@ void DnnFeatureExtractor::extractFeatures(cv::Mat& grey_image, float* features){
 	input_cnn.push_back(input_blob);
 
 	std::cout << "hi " << datum->channels() << ' ' << data.length() << "\n";
-	impl->net_->Forward(input_cnn);
+    cur_impl->net_->Forward(input_cnn);
 #else
 	float loss = 0.0;
 	std::vector<cv::Mat> dv = { img_resized };
 	std::vector<int> dvl = { 0 };
-	impl->input_layer_->AddMatVector(dv, dvl);
-	std::vector<Blob<float>*> results = impl->net_->ForwardPrefilled(&loss);
+    cur_impl->input_layer_->AddMatVector(dv, dvl);
+    std::vector<Blob<float>*> results = cur_impl->net_->ForwardPrefilled(&loss);
 #endif
 
 
-	for (int i = 0; i < impl->feature_blob_->count(); ++i)
-		features[i] = impl->feature_blob_->cpu_data()[i];
+    for (int i = 0; i < cur_impl->feature_blob_->count(); ++i)
+        features[i] = cur_impl->feature_blob_->cpu_data()[i];
 
 }
+
+#ifdef DETECT_AGE
+const char* DnnFeatureExtractor::detect_age(cv::Mat& grey_image){
+    const int age_count=8;
+    static float features[age_count];
+    const char* ages[]={"(0, 2)","(4, 6)","(8, 12)","(15, 20)","(25, 32)","(38, 43)","(48, 53)","(60, 100)"};
+    extractFeatures(grey_image,features,false);
+    float max_feature=features[0];
+    int max_ind=0;
+    for(int i=0;i<age_count;++i){
+        qDebug()<<i<<' '<<features[i];
+        if(features[i]>max_feature){
+            max_feature=features[i];
+            max_ind=i;
+        }
+    }
+    return ages[max_ind];
+}
+#endif
+
 
 #if 0
 #include "caffe/layer.hpp"

@@ -7,5 +7,6 @@
         <file>caffe_models/LCNN_prediction.prototxt</file>
         <file>caffe_models/LCNN.caffemodel</file>
         <file>caffe_models/LCNN_C.caffemodel</file>
+        <file>haarcascade_eye.xml</file>
     </qresource>
 </RCC>
