@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     //qDebug()<<QDir::current();
     //QDir::setCurrent(QStringLiteral("/Users/avsavchenko/Documents/my_soft/github/recognition_testing/precomputed_features"));
     QDir::setCurrent(QStringLiteral("../src/recognition_testing/precomputed_features"));
-#if 0
+#if 1
     testRecognition();
 #elif 0
     testYTFRecognition();

@@ -10,6 +10,7 @@
 #include <string>
 #include <chrono>
 #include <functional>
+#include <limits>
 
 using namespace std;
 //g++ -std=c++11 ImageTesting.cpp -o ImageTesting;./ImageTesting
@@ -29,66 +30,523 @@ using namespace std;
 #define print_endl cout<<endl;
 #endif
 
-int num_of_unreliable = 0;
-const int reduced_features_count =
-#ifdef USE_LCNN
-        64;
-#else
-        256;
-#endif
-int recognize_image(const vector<ImageInfo>& dbImages, const ImageInfo& testImageInfo, int class_count){
-        const int DIST_WEIGHT=100;
-        int bestInd = -1;
-        double bestDist = 100000, secondBestDist=100000;
-        vector<double> distances(dbImages.size());
-        vector<double> probabs(class_count);
-        double max_probab,probab;
-        for (int j = 0; j < dbImages.size(); ++j){
-                distances[j] = testImageInfo.distance(dbImages[j], 0, reduced_features_count);
-                probab = exp(-distances[j]*DIST_WEIGHT);
-                if(probab>probabs[dbImages[j].classNo])
-                    probabs[dbImages[j].classNo]=probab;
-                if (distances[j] < bestDist){
-                        secondBestDist = bestDist;
-                        bestDist = distances[j];
-                        bestInd = j;
-                        max_probab=probab;
-                }
-        }
+static int num_of_unreliable = 0;
 
-        int MAX_PROBABS_COUNT=5;//probabs.size();//10;
-        nth_element(probabs.begin(),probabs.begin()+MAX_PROBABS_COUNT,probabs.end(), std::greater<double>());
+class Classifier{
+public:
+    Classifier(string n):name(n){}
+    virtual ~Classifier(){}
+
+    virtual void train(std::vector<ImageInfo>* pDb){ pDbImages=pDb; }
+    virtual int recognize(ImageInfo& testImageInfo)=0;
+    string get_name(){ return name; }
+private:
+    string name;
+
+protected:
+    std::vector<ImageInfo>* pDbImages;
+    static string build_name(string prefix, int max_feats);
+};
+#include <sstream>
+string Classifier::build_name(string prefix, int param){
+    ostringstream os;
+    os << prefix << ", " << param;
+    return os.str();
+}
+
+//=================================
+class BruteForceClassifier :public Classifier{
+public:
+    BruteForceClassifier(int max_feats = FEATURES_COUNT) :Classifier(Classifier::build_name("BF", max_feats)), max_features(max_feats){}
+    int recognize(ImageInfo& testImageInfo){
+        int bestInd= recognize_image_bf(*pDbImages, testImageInfo, max_features);
+        int bestClassInd = -1;
+        if (bestInd != -1)
+            bestClassInd = (*pDbImages)[bestInd].classNo;
+        return bestClassInd;
+    }
+
+private:
+    int max_features;
+};
+
+//=================================
+class ConventionalTWDClassifier :public Classifier{
+public:
+    enum class TWD_Type{ Posteriors, DistDiff, DistRatio };
+    ConventionalTWDClassifier(int cls_num, TWD_Type t, double th, int feat_count = 64) :
+        Classifier(build_name(t,th)), num_of_classes(cls_num), reduced_features_count(feat_count), threshold(th), type(t)
+    {}
+    int recognize(ImageInfo& testImageInfo);
+
+private:
+    int num_of_classes;
+    int reduced_features_count;
+    double threshold;
+    TWD_Type type;
+    static string build_name(TWD_Type type, double threshold);
+};
+
+string ConventionalTWDClassifier::build_name(TWD_Type type, double threshold){
+    string prefix = "";
+    switch (type){
+    case TWD_Type::Posteriors:
+        prefix = "TWD posteriors";
+        break;
+    case TWD_Type::DistDiff:
+        prefix = "TWD diff";
+        break;
+    case TWD_Type::DistRatio:
+        prefix = "TWD ratio";
+        break;
+    }
+    ostringstream os;
+    os << prefix << ", " << threshold;
+    return os.str();
+}
+
+int ConventionalTWDClassifier::recognize(ImageInfo& testImageInfo){
+    const vector<ImageInfo>& dbImages = *pDbImages;
+    int bestInd = -1;
+    double bestDist = 100000, secondBestDist = 100000;
+    vector<double> distances(dbImages.size());
+    const int DIST_WEIGHT = 100;
+    vector<double> probabs(num_of_classes);
+    double max_probab, probab;
+    for (int j = 0; j < dbImages.size(); ++j){
+        distances[j] = testImageInfo.distance(dbImages[j], 0, reduced_features_count);
+        if (type == TWD_Type::Posteriors){
+            probab = exp(-distances[j] * DIST_WEIGHT);
+            if (probab>probabs[dbImages[j].classNo])
+                probabs[dbImages[j].classNo] = probab;
+        }
+        if (distances[j] < bestDist){
+            if (bestInd != -1 && dbImages[bestInd].classNo != dbImages[j].classNo)
+                secondBestDist = bestDist;
+            bestDist = distances[j];
+            bestInd = j;
+            if (type == TWD_Type::Posteriors){
+                max_probab = probab;
+            }
+        }
+    }
+
+    bool is_reliable =
+        //true;
+        false;
+
+    switch (type){
+    case TWD_Type::Posteriors:
+    {
+        int MAX_PROBABS_COUNT = 5;//probabs.size();//10;
+        nth_element(probabs.begin(), probabs.begin() + MAX_PROBABS_COUNT, probabs.end(), std::greater<double>());
         //std::sort(probabs.begin(),probabs.end(), std::greater<double>());
-        double sum=0;
-        for(int i=0;i<MAX_PROBABS_COUNT;++i){
-            sum+=probabs[i];
+        double sum = 0;
+        for (int i = 0; i < MAX_PROBABS_COUNT; ++i){
+            sum += probabs[i];
         }
         max_probab /= sum;
-        bool is_reliable =
-                //true;
-                false;
-                //(bestDist / secondBestDist) < 0.75;
-                //max_probab > 0.0008;//0.4 - 1000 weight
-                //max_probab > 0.09;
-               //max_probab > 0.0025;
-                //max_probab > 0.24;
-                //max_probab > 0.21;
-//cout<<max_probab<<endl;
-        if (!is_reliable){
-                ++num_of_unreliable;
-                bestInd = -1;
-                bestDist = 100000;
-                for (int j = 0; j < dbImages.size(); ++j){
-                        distances[j] = (distances[j] * reduced_features_count +
-                                testImageInfo.distance(dbImages[j], reduced_features_count)*(FEATURES_COUNT - reduced_features_count)) / FEATURES_COUNT;
-                        if (distances[j] < bestDist){
-                                bestDist = distances[j];
-                                bestInd = j;
-                        }
-                }
+        is_reliable = max_probab > threshold;
+            //max_probab > 0.0008;//0.4 - 1000 weight
+            //max_probab > 0.09;
+            //max_probab > 0.0025;
+            //max_probab > 0.24;
+        //max_probab > 0.21;
+    }
+    break;
+    case TWD_Type::DistDiff:
+        //cout << (secondBestDist - bestDist) << endl;
+        is_reliable = (secondBestDist - bestDist) > threshold;
+        break;
+    case TWD_Type::DistRatio:
+        is_reliable = (bestDist / secondBestDist) < threshold;
+        break;
+    }
+    if (!is_reliable){
+        ++num_of_unreliable;
+        bestInd = -1;
+        bestDist = 100000;
+        int last_feature =
+            //FEATURES_COUNT;
+            256;
+        for (int j = 0; j < dbImages.size(); ++j){
+            distances[j] = (distances[j] * reduced_features_count +
+                testImageInfo.distance(dbImages[j], reduced_features_count, last_feature)*(last_feature - reduced_features_count)) / last_feature;
+            if (distances[j] < bestDist){
+                bestDist = distances[j];
+                bestInd = j;
+            }
         }
-        return bestInd;
+    }
+
+    int bestClassInd = -1;
+    if (bestInd != -1)
+        bestClassInd = dbImages[bestInd].classNo;
+    return bestClassInd;
 }
+//=================================
+class ProposedTWDClassifier :public Classifier{
+public:
+    ProposedTWDClassifier(int cls_num, int feat_count, double th) :
+        Classifier(build_name(feat_count,th)), num_of_classes(cls_num), reduced_features_count(feat_count), threshold(1.0/th)
+    {}
+    int recognize(ImageInfo& testImageInfo);
+private:
+    int num_of_classes,reduced_features_count;
+    double threshold;
+
+    static string build_name(int feat_count, double threshold);
+};
+
+string ProposedTWDClassifier::build_name(int feat_count, double threshold){
+    ostringstream os;
+    os << "Proposed TWD, " << feat_count<<", " << threshold;
+    return os.str();
+}
+#define CHECK_ALL_INSTANCES
+int ProposedTWDClassifier::recognize(ImageInfo& testImageInfo){
+    const vector<ImageInfo>& dbImages = *pDbImages;
+    int bestInd = -1;
+    vector<double> distances(dbImages.size());
+#ifdef CHECK_ALL_INSTANCES
+    vector<int> instances_to_check(dbImages.size());
+#else
+    vector<int> instances_to_check(num_of_classes);
+    vector<double> class_min_distances(num_of_classes);
+#endif
+    fill(instances_to_check.begin(), instances_to_check.end(), 1);
+
+    //const FeaturesVector& lhs=testImageInfo.features;
+    int last_feature =
+        //FEATURES_COUNT;
+        256;
+
+    for (int cur_features = 0; cur_features<last_feature; cur_features += reduced_features_count){
+        double bestDist = 100000;//, secondBestDist=100000;
+#ifndef CHECK_ALL_INSTANCES
+        fill(class_min_distances.begin(), class_min_distances.end(), numeric_limits<float>::max());
+#endif
+        for (int j = 0; j < dbImages.size(); ++j){
+#ifdef CHECK_ALL_INSTANCES
+            if (!instances_to_check[j])
+#else
+            if (!instances_to_check[dbImages[j].classNo])
+#endif
+                continue;
+            /*const FeaturesVector& rhs=dbImages[j].features;
+            float d=0;
+            for(int fi=cur_features;fi<cur_features+reduced_features_count;++fi)
+            d+=(lhs[fi]-rhs[fi])*(lhs[fi]-rhs[fi]);
+            distances[j] += d;*/
+
+
+            distances[j] += testImageInfo.distance(dbImages[j], cur_features, cur_features + reduced_features_count);
+#ifndef CHECK_ALL_INSTANCES
+            if (distances[j]<class_min_distances[dbImages[j].classNo])
+                class_min_distances[dbImages[j].classNo] = distances[j];
+#endif
+            if (distances[j] < bestDist){
+                bestDist = distances[j];
+                bestInd = j;
+            }
+        }
+
+        int num_of_variants = 0;
+        //double threshold = 0.01*(cur_features + reduced_features_count);
+        double dist_threshold = bestDist*threshold;// 1.43; // bestDist / 0.7;
+#ifdef CHECK_ALL_INSTANCES
+        ++num_of_variants;
+        int bestClass = dbImages[bestInd].classNo;
+        for (int j = 0; j<instances_to_check.size(); ++j){
+            if (instances_to_check[j]){
+                if (distances[j]>dist_threshold)
+                    instances_to_check[j] = 0;
+                else if (dbImages[j].classNo != bestClass)
+                    ++num_of_variants;
+            }
+        }
+#else
+        for (int c = 0; c<instances_to_check.size(); ++c){
+            if (instances_to_check[c]){
+                if (class_min_distances[c]>dist_threshold)
+                    instances_to_check[c] = 0;
+                else
+                    ++num_of_variants;
+            }
+        }
+#endif
+        if (num_of_variants == 1)
+            break;
+        if (cur_features == 0)
+            ++num_of_unreliable;
+    }
+
+    int bestClassInd = -1;
+    if (bestInd != -1)
+        bestClassInd = dbImages[bestInd].classNo;
+    return bestClassInd;
+}
+//=================================
+#include <opencv2/core.hpp>
+#include <opencv2/ml.hpp>
+using namespace cv;
+using namespace cv::ml;
+
+static Mat get_training_mat(std::vector<ImageInfo>& db, int num_of_features=FEATURES_COUNT){
+    Mat trainingDataMat(db.size(), num_of_features, CV_32FC1);
+
+    for (int ind = 0; ind < db.size();++ind){
+        for (int fi = 0; fi < num_of_features; ++fi){
+            trainingDataMat.at<float>(ind, fi) = db[ind].features[fi];
+        }
+    }
+    return trainingDataMat;
+}
+static Mat get_query_mat(ImageInfo& test, int num_of_features = FEATURES_COUNT){
+    Mat queryDataMat(1, num_of_features, CV_32FC1);
+
+    for (int fi = 0; fi < num_of_features; ++fi){
+        queryDataMat.at<float>(0, fi) = test.features[fi];
+    }
+    return queryDataMat;
+}
+static Mat get_labels_mat(std::vector<ImageInfo>& db){
+    Mat labelsMat(db.size(), 1, CV_32S);
+
+    for (int ind = 0; ind < db.size(); ++ind){
+        labelsMat.at<int>(ind, 0) = db[ind].classNo;
+    }
+    return labelsMat;
+}
+
+const int opencv_num_of_features = 256;// FEATURES_COUNT;
+//256;
+class SVMClassifier :public Classifier{
+public:
+    SVMClassifier() : Classifier("SVM")
+    {
+        opencvClassifier = SVM::create();
+        opencvClassifier->setType(SVM::C_SVC);
+        //opencvClassifier->setC(0.001);
+        //opencvClassifier->setKernel(SVM::LINEAR);
+        opencvClassifier->setKernel(SVM::RBF);
+        //opencvClassifier->setGamma(1.0 / num_of_cont_features);
+        opencvClassifier->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER + TermCriteria::EPS, 100, 1e-6));
+
+    }
+    void train(std::vector<ImageInfo>* pDb){
+        opencvClassifier->train(get_training_mat(*pDb, opencv_num_of_features), ROW_SAMPLE, get_labels_mat(*pDb));
+    }
+    int recognize(ImageInfo& testImageInfo){
+        float response = opencvClassifier->predict(get_query_mat(testImageInfo, opencv_num_of_features));
+        return (int)response;
+    }
+private:
+    Ptr<SVM> opencvClassifier;
+};
+
+class RFClassifier :public Classifier{
+public:
+    RFClassifier(int num_of_classes) : Classifier("RF")
+    {
+        opencvClassifier = RTrees::create();
+        opencvClassifier->setMaxDepth(opencv_num_of_features);
+        opencvClassifier->setMaxCategories(num_of_classes);
+        /*opencvClassifier->setMinSampleCount(2);
+        opencvClassifier->setRegressionAccuracy(0);
+        opencvClassifier->setUseSurrogates(false);
+        opencvClassifier->setPriors(Mat());
+        opencvClassifier->setCalculateVarImportance(false);
+        opencvClassifier->setActiveVarCount(0);*/
+        opencvClassifier->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 512, 1e-6));
+
+    }
+    void train(std::vector<ImageInfo>* pDb){
+        opencvClassifier->train(get_training_mat(*pDb, opencv_num_of_features), ROW_SAMPLE, get_labels_mat(*pDb));
+    }
+    int recognize(ImageInfo& testImageInfo){
+        float response = opencvClassifier->predict(get_query_mat(testImageInfo, opencv_num_of_features));
+        return (int)response;
+    }
+private:
+    Ptr<RTrees> opencvClassifier;
+};
+
+
+class MLPClassifier :public Classifier{
+public:
+    MLPClassifier(int num_of_cls, int num_of_feats = FEATURES_COUNT) : Classifier("MLP"), num_of_features(num_of_feats), num_of_classes(num_of_cls)
+    {
+        Mat layer_sizes = Mat(3, 1, CV_16U);
+        layer_sizes.row(0) = Scalar(num_of_features);
+        layer_sizes.row(1) = Scalar(256);
+        layer_sizes.row(2) = Scalar(num_of_classes);
+
+#if 0
+        int method = ANN_MLP::BACKPROP;
+        double method_param = 0.0001;
+        int max_iter = 100;
+#else
+        int method = ANN_MLP::RPROP;
+        double method_param = 0.1;
+        int max_iter = 100;
+#endif
+        opencvClassifier = ANN_MLP::create();
+        opencvClassifier->setLayerSizes(layer_sizes);
+        opencvClassifier->setActivationFunction(ANN_MLP::SIGMOID_SYM, 1, 1);
+        opencvClassifier->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, max_iter, 1e-6));
+        opencvClassifier->setTrainMethod(method, method_param);
+    }
+    void train(std::vector<ImageInfo>* pDb){
+        train_responses = Mat::zeros(pDb->size(), num_of_classes, CV_32F);
+
+        // 1. unroll the responses
+        for (int i = 0; i < pDb->size(); i++)
+        {
+            int cls_label = (*pDb)[i].classNo;
+            train_responses.at<float>(i, cls_label) = 1.f;
+        }
+        training_mat = get_training_mat(*pDb, num_of_features);
+        bool res = opencvClassifier->train(training_mat, ROW_SAMPLE, train_responses);
+        /*cout << " train res=" << res << ' ' << num_of_classes << ' ' << train_responses.rows << ' ' << train_responses.cols <<
+            ' ' << training_mat.rows << ' ' << training_mat.cols << ' ' << endl;*/
+    }
+    int recognize(ImageInfo& testImageInfo){
+        //cv::Mat predictions;
+        Mat query_mat = get_query_mat(testImageInfo, num_of_features);
+        float response = opencvClassifier->predict(query_mat);
+        //cout << response << endl;
+        /*float maxPrediction = -1;
+        response = -1;
+        for (int i = 0; i < predictions.cols; i++)
+        {
+            float prediction = predictions.at<float>(i);
+            //cout << i << ' ' << prediction << endl;
+            if (prediction > maxPrediction)
+            {
+                maxPrediction = prediction;
+                response = i;
+            }
+        }*/
+        //cout << "final:" << response << ' ' << testImageInfo.classNo<<endl;
+        return (int)response;
+    }
+private:
+    Ptr<ANN_MLP> opencvClassifier;
+    int num_of_features, num_of_classes;
+    Mat train_responses, training_mat;
+};
+void testRecognitionMethod(ImagesDatabase& totalImages, Classifier* classifier){
+    srand(13);
+    cout << classifier->get_name().c_str();
+    print_endl;
+    int num_of_classes = totalImages.size();
+
+    const int TESTS = 10;
+    std::vector<ImageInfo> dbImages, testImages;
+    double total_time = 0;
+    double totalTestsErrorRate = 0, errorRateVar = 0, totalRecall = 0;
+    for (int testCount = 0; testCount < TESTS; ++testCount){
+        int errorsCount = 0;
+        getTrainingAndTestImages(totalImages, dbImages, testImages);
+        classifier->train(&dbImages);
+        vector<int> testClassCount(num_of_classes), testErrorRates(num_of_classes);
+        for (ImageInfo testImageInfo : testImages){
+            ++testClassCount[testImageInfo.classNo];
+        }
+        num_of_unreliable = 0;
+
+        auto t1 = chrono::high_resolution_clock::now();
+        for (ImageInfo testImageInfo : testImages){
+            int bestClassInd = classifier->recognize(testImageInfo);
+            if (bestClassInd == -1 || testImageInfo.classNo != bestClassInd){
+                ++errorsCount;
+                ++testErrorRates[testImageInfo.classNo];
+            }
+        }
+        auto t2 = chrono::high_resolution_clock::now();
+        total_time += std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() / (1.0*testImages.size());
+
+        double unreliable_ratio = 100.0*num_of_unreliable / testImages.size();
+
+        double errorRate = 100.*errorsCount / testImages.size();
+        double recall = 0;
+        int num_of_test_classes = 0;
+        for (int i = 0; i<num_of_classes; ++i){
+            if (testClassCount[i]>0){
+                recall += 100.*testErrorRates[i] / testClassCount[i];
+                ++num_of_test_classes;
+            }
+        }
+
+        recall /= num_of_test_classes;
+        recall = 100 - recall;
+        totalRecall += recall;
+        //if (testCount == TESTS - 1)
+        {
+            cout << "test=" << testCount << " error=" << errorRate << " recall=" << recall << " unrel=" << unreliable_ratio << "% db=" << dbImages.size() <<
+                " test=" << testImages.size();
+            print_endl;
+        }
+        totalTestsErrorRate += errorRate;
+        errorRateVar += errorRate * errorRate;
+
+    }
+    totalTestsErrorRate /= TESTS;
+    total_time /= TESTS;
+    totalRecall /= TESTS;
+    errorRateVar = sqrt((errorRateVar - totalTestsErrorRate * totalTestsErrorRate * TESTS) / (TESTS - 1));
+    cout << "Avg error=" << totalTestsErrorRate << " Sigma=" << errorRateVar << " recall=" << totalRecall << " time(ms)=" << total_time;
+    print_endl;
+}
+
+void testRecognition(){
+        ImagesDatabase totalImages;
+        unordered_map<string, int> person2indexMap;
+#if defined(USE_PCA) || 0
+        ImagesDatabase orig_database;
+        loadImages(orig_database,FEATURES_FILE_NAME,person2indexMap);
+        extractPCA(orig_database, totalImages);
+#elif 1
+        ImagesDatabase orig_database;
+        loadImages(totalImages,FEATURES_FILE_NAME,person2indexMap);
+
+#else
+        //loadImages(totalImages,FEATURES_FILE_NAME,person2indexMap);
+        ImagesDatabase orig_database;
+        loadImages(orig_database, FEATURES_FILE_NAME,person2indexMap);
+        for (auto& features:orig_database){
+            if (features.size() > 1)
+                totalImages.push_back(features);
+        }
+        cout<<"total size="<<totalImages.size();
+#endif
+        int num_of_classes = totalImages.size();
+        vector<Classifier*> classifiers;
+        classifiers.push_back(new BruteForceClassifier());
+        classifiers.push_back(new BruteForceClassifier(64));
+    #ifndef USE_LCNN
+        classifiers.push_back(new BruteForceClassifier(256));
+    #endif
+        classifiers.push_back(new ConventionalTWDClassifier(num_of_classes, ConventionalTWDClassifier::TWD_Type::Posteriors,0.24));
+        classifiers.push_back(new ConventionalTWDClassifier(num_of_classes, ConventionalTWDClassifier::TWD_Type::DistDiff, 0.003));
+        classifiers.push_back(new ConventionalTWDClassifier(num_of_classes, ConventionalTWDClassifier::TWD_Type::DistRatio, 0.7));
+        classifiers.push_back(new ProposedTWDClassifier(num_of_classes,32,0.7));
+        classifiers.push_back(new ProposedTWDClassifier(num_of_classes, 64, 0.7));
+        classifiers.push_back(new RFClassifier(num_of_classes));
+        classifiers.push_back(new SVMClassifier());
+        classifiers.push_back(new MLPClassifier(num_of_classes, 256));// opencv_num_of_features));
+
+        /*for (int feat_count = 1; feat_count < 256;feat_count*=2)
+            classifiers.push_back(new ProposedTWDClassifier(num_of_classes, feat_count, 0.7));
+        for (double threshold = 0.1; threshold < 1; threshold += 0.05)
+            classifiers.push_back(new ProposedTWDClassifier(num_of_classes, 32, threshold));*/
+
+        for (Classifier* classifier : classifiers){
+            testRecognitionMethod(totalImages, classifier);
+        }
+}
+
 
 #if 0
 //#define USE_OUTER
@@ -253,7 +711,7 @@ void testVerification(){
     }
 }
 #else //joint bayesian
-void testVerification(){    
+void testVerification(){
     const int num_of_inout_features=256;//FEATURES_COUNT;
     ImagesDatabase totalImages;
     unordered_map<string, int> person2indexMap;
@@ -384,73 +842,4 @@ void testVerification(){
     print_endl;
 }
 #endif
-
-void testRecognition(){
-        ImagesDatabase totalImages;
-        unordered_map<string, int> person2indexMap;
-#ifdef USE_PCA
-        ImagesDatabase orig_database;
-        loadImages(orig_database,FEATURES_FILE_NAME,person2indexMap);
-        extractPCA(orig_database, totalImages);
-#else
-        //loadImages(totalImages,FEATURES_FILE_NAME,person2indexMap);
-        ImagesDatabase orig_database;
-        loadImages(orig_database, FEATURES_FILE_NAME,person2indexMap);
-        for (auto& features:orig_database){
-            if (features.size() > 1)
-                totalImages.push_back(features);
-        }
-        cout<<"total size="<<totalImages.size();
-#endif
-        int num_of_classes=totalImages.size();
-        const int TESTS = 10;
-        std::vector<ImageInfo> dbImages, testImages;
-        double total_time = 0;
-        double totalTestsErrorRate = 0, errorRateVar = 0, totalRecall=0;
-        for (int testCount = 0; testCount < TESTS; ++testCount){
-                int errorsCount = 0;
-                getTrainingAndTestImages(totalImages, dbImages, testImages);
-                vector<int> testClassCount(num_of_classes),testErrorRates(num_of_classes);
-                for (ImageInfo testImageInfo: testImages){
-                    ++testClassCount[testImageInfo.classNo];
-                }
-
-                num_of_unreliable = 0;
-
-                auto t1 = chrono::high_resolution_clock::now();
-                for (ImageInfo testImageInfo: testImages){
-                        int bestInd = recognize_image(dbImages, testImageInfo, totalImages.size());
-                        if (bestInd == -1 || testImageInfo.classNo != dbImages[bestInd].classNo){
-                                ++errorsCount;
-                                ++testErrorRates[testImageInfo.classNo];
-                        }
-                }
-                auto t2 = chrono::high_resolution_clock::now();
-                total_time += std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()/(1.0*testImages.size());
-
-                double unreliable_ratio = 100.0*num_of_unreliable / testImages.size();
-
-                double errorRate = 100.*errorsCount / testImages.size();
-                double recall=0;
-                for(int i=0;i<num_of_classes;++i){
-                    if(testClassCount[i]>0)
-                        recall+=100-100.*testErrorRates[i] / testClassCount[i];
-                }
-                recall/=num_of_classes;
-                totalRecall+=recall;
-                cout << "test=" << testCount << " error=" << errorRate<<" recall="<<recall << " unreliable=" << unreliable_ratio<<"% dbSize=" << dbImages.size() <<" testSize=" << testImages.size();
-                print_endl;
-
-                totalTestsErrorRate += errorRate;
-                errorRateVar += errorRate * errorRate;
-
-        }
-        totalTestsErrorRate /= TESTS;
-        total_time /= TESTS;
-        errorRateVar = sqrt((errorRateVar - totalTestsErrorRate * totalTestsErrorRate * TESTS) / (TESTS - 1));
-        totalRecall/=TESTS;
-        cout << "Avg error=" << totalTestsErrorRate << " Sigma=" << errorRateVar <<" time for 1 image (ms)="<<total_time<< " Recall="<<totalRecall;
-        print_endl;
-}
-
 

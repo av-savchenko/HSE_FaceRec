@@ -3,12 +3,12 @@
 
 //#define USE_LCNN
 #ifndef USE_LCNN
-//#define USE_VGG
+#define USE_VGG
 #endif
 
-//#define USE_LFW
+#define USE_LFW
 //#define USE_CASIA
-#define USE_CALTECH
+//#define USE_CALTECH
 
 static const char* PCA_CASIA_FEATURES_FILE_NAME ="casia_dnn_features_my_best_pca.txt";
 
@@ -26,9 +26,9 @@ static const char* PCA_FEATURES_FILE_NAME =
 #ifdef USE_CALTECH
 #ifdef USE_VGG
         //"dnn_101_vgg19_last_mean.txt";
-        //"dnn_101_vgg19_img_resized_fc6.txt";
+        "dnn_101_vgg19_img_resized_fc6.txt";
         //"birds_vgg19_fc6.txt";
-        "dogs_dnn_vgg19_features_mean_fc7.txt";
+        //"dogs_dnn_vgg19_features_mean_fc7.txt";
 #else
         "dnn_101_googlenet.txt";
         //"dnn_256_googlenet.txt";

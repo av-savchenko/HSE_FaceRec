@@ -30,6 +30,7 @@ public:
 
 int loadImages(ImagesDatabase& imagesDb, std::string features_file, std::unordered_map<std::string, int>& person2indexMap, bool early_stop=false);
 void getTrainingAndTestImages(const ImagesDatabase& totalImages, std::vector<ImageInfo>& dbImages, std::vector<ImageInfo>& testImages, bool randomize=true);
-int recognize_image_bf(const std::vector<ImageInfo>& dbImages, const ImageInfo& testImageInfo, int class_count=0);
+int recognize_image_bf(const std::vector<ImageInfo>& dbImages, const ImageInfo& testImageInfo, int max_features=0);
+void extractPCA(const ImagesDatabase& orig_database, ImagesDatabase& new_database);
 
 #endif // DB_FEATURES_H

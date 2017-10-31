@@ -268,21 +268,68 @@ void extractPCA(const ImagesDatabase& orig_database, ImagesDatabase& new_databas
         }
         saveImages(new_database);
 }
+#else
+void extractPCA(const ImagesDatabase& orig_database, ImagesDatabase& new_database){
+        int total_images_count = 0;
+        for (auto& person : orig_database){
+                total_images_count += person.size();
+        }
+        Mat mat_features(total_images_count, FEATURES_COUNT, CV_32F);
+        int ind = 0;
+        for (auto& person : orig_database){
+                for (const FeaturesVector& features : person){
+                        for (int j = 0; j < FEATURES_COUNT; ++j){
+                                //db_features[i1*featuresCount + j] =
+                                mat_features.at<float>(ind, j) =
+                                        features[j];
+                        }
+                        ++ind;
+                }
+        }
+
+        PCA pca(mat_features, Mat(), CV_PCA_DATA_AS_ROW, 0);
+        Mat mat_projection_result=pca.project(mat_features);
+        qDebug() << "rows="<<mat_projection_result.rows << " cols=" << mat_projection_result.cols;
+
+        ind = 0;
+        new_database.reserve(orig_database.size());
+        for (auto& person : orig_database){
+                ImagesDatabase::value_type class_features_list;
+                class_features_list.reserve(person.size());
+                for (int i=0;i<person.size();++i){
+                        class_features_list.push_back(FeaturesVector());
+                        class_features_list.back().resize(FEATURES_COUNT);
+                        for (int j = 0; j < FEATURES_COUNT; ++j){
+                                //db_features[i1*featuresCount + j] =
+                                class_features_list.back()[j] = mat_projection_result.at<float>(ind, j);
+                        }
+
+                        ++ind;
+                }
+                new_database.push_back(class_features_list);
+        }
+        //cout << "rows="<<mat_projection_result.rows << " cols=" << mat_projection_result.cols << endl;
+        /*cout << "example: " << mat_features.at<float>(0, 0) << " " << mat_projection_result.at<float>(0, 0) << endl;
+        cout << "example: " << mat_features.at<float>(0, 1) << " " << mat_projection_result.at<float>(0, 1) << endl;
+        cout << "example: " << mat_features.at<float>(0, FEATURES_COUNT) << " " << mat_projection_result.at<float>(0, FEATURES_COUNT) << endl;*/
+}
 #endif
 
 
-int recognize_image_bf(const vector<ImageInfo>& dbImages, const ImageInfo& testImageInfo, int ){
-        int bestInd = -1;
-        double bestDist = 100000;
-        vector<double> distances(dbImages.size());
-        for (int j = 0; j < dbImages.size(); ++j){
-                distances[j] =
-                        testImageInfo.distance(dbImages[j]);
-                        //testImageInfo.distance(dbImages[j],0,reduced_features_count);
-                if (distances[j] < bestDist){
-                        bestDist = distances[j];
-                        bestInd = j;
-                }
-        }
-        return bestInd;
+int recognize_image_bf(const vector<ImageInfo>& dbImages, const ImageInfo& testImageInfo, int max_features){
+    if(max_features==0)
+        max_features=FEATURES_COUNT;
+    int bestInd = -1;
+    double bestDist = 100000;
+    vector<double> distances(dbImages.size());
+    for (int j = 0; j < dbImages.size(); ++j){
+            distances[j] =
+                    //testImageInfo.distance(dbImages[j]);
+                    testImageInfo.distance(dbImages[j],0,max_features);
+            if (distances[j] < bestDist){
+                    bestDist = distances[j];
+                    bestInd = j;
+            }
+    }
+    return bestInd;
 }
