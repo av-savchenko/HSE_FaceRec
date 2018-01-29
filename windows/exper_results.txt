@@ -1,0 +1,1315 @@
+
+IJB-A
+standard 1:N protocol
+LCNN (C)
+NN:video error rate=41.694 (502 out of 1,204) recall=57.674 avg time=1.573(ms) prev time=11.970
+MAP:video error rate=41.362 (498 out of 1,204) recall=58.082 avg time=1.591(ms) prev time=12.110
+MAP (100): video error rate=39.867 (480 out of 1,204) recall=59.840 avg time=1.541(ms) prev time=11.728
+SVM:video error rate=42.774 (515 out of 1,204) recall=54.526 avg time=1.074(ms) prev time=8.172
+
+proposed(1000, *8):video error rate=41.777 (503 out of 1,204) recall=57.790 avg time=2.124(ms) prev time=16.170
+(1000, *28):video error rate=55.731 (671 out of 1,204) recall=48.436 avg time=2.222(ms) prev time=16.914
+(10,*6): video error rate=39.701 (478 out of 1,204) recall=59.701 avg time=1.951(ms) prev time=14.849
+(10,*4):video error rate=38.953 (469 out of 1,204) recall=60.719 avg time=1.892(ms) prev time=14.400
+(100, *6): video error rate=39.120 (471 out of 1,204) recall=60.648 avg time=1.941(ms) prev time=14.774
+(100,*4): video error rate=38.206 (460 out of 1,204) recall=61.722 avg time=1.935(ms) prev time=14.728
+
+center-face:
+NN:video error rate=50.415 (607 out of 1,204) recall=47.550 avg time=2.786(ms) prev time=21.204
+MAP (100):video error rate=49.419 (595 out of 1,204) recall=48.725 avg time=2.798(ms) prev time=21.296
+SVM:video error rate=47.425 (571 out of 1,204) recall=49.094 avg time=1.672(ms) prev time=12.725
+proposed (100,*6): video error rate=45.598 (549 out of 1,204) recall=54.584 avg time=3.581(ms) prev time=27.262
+
+
+VGGFace
+Euclidean:
+NN:video error rate=12.957 (156 out of 1,204) recall=86.019 avg time=18.297(ms) prev time=139.282
+MAP:video error rate=12.791 (154 out of 1,204) recall=86.291 avg time=18.606(ms) prev time=141.629
+SVM:SVM video error rate=12.292 (148 out of 1,204) recall=86.357 avg time=12.665(ms) prev time=96.410
+proposed(10000,*8): video error rate=11.794 (142 out of 1,204) recall=87.766 avg time=18.813(ms) prev time=143.208
+(1000,*8): video error rate=11.545 (139 out of 1,204) recall=88.063 avg time=18.807(ms) prev time=143.163
+(100,*8): video error rate=11.628 (140 out of 1,204) recall=87.963 avg time=18.811(ms) prev time=143.190
+
+chi-squared:
+NN:video error rate=12.542 (151 out of 1,204) recall=86.302 avg time=40.470(ms) prev time=308.066
+MAP: video error rate=12.126 (146 out of 1,204) recall=86.777 avg time=40.580(ms) prev time=308.901
+proposed (10000,*6):  video error rate=11.628 (140 out of 1,204) recall=88.227 avg time=40.031(ms) prev time=304.723
+(10000,*4): video error rate=11.130 (134 out of 1,204) recall=88.387 avg time=40.541(ms) prev time=308.600
+
+
+resnet-101
+Euclidean:
+NN: video error rate=22.093 (266 out of 1,204) recall=76.069 avg time=9.498(ms) prev time=72.298
+MAP (10000): video error rate=21.429 (258 out of 1,204) recall=77.311 avg time=9.493(ms) prev time=72.264
+MAP (100: video error rate=21.844 (263 out of 1,204) recall=76.395 avg time=9.633(ms) prev time=73.331
+SVM: video error rate=20.183 (243 out of 1,204) recall=77.880 avg time=6.071(ms) prev time=46.213
+proposed(*8,10000): video error rate=20.017 (241 out of 1,204) recall=78.938 avg time=9.807(ms) prev time=74.649
+(*8, 1000): video error rate=19.435 (234 out of 1,204) recall=79.838 avg time=9.903(ms) prev time=75.384
+(*8, 100):video error rate=19.352 (233 out of 1,204) recall=80.059 avg time=9.924(ms) prev time=75.542
+
+chi-squared:
+NN:video error rate=20.764 (250 out of 1,204) recall=77.755 avg time=15.178(ms) prev time=115.538
+MAP (100/1000):video error rate=20.764 (250 out of 1,204) recall=77.755 avg time=15.202(ms) prev time=115.716
+proposed (1000,*4):video error rate=18.771 (226 out of 1,204) recall=80.428 avg time=16.233(ms) prev time=123.571 
+
+
+vgg2 resnet
+Euclidean:
+NN:video error rate=4.236 (51 out of 1,204) recall=95.512 avg time=9.452(ms)
+MAP:video error rate=4.236 (51 out of 1,204) recall=95.281
+NN (aggregate all):video error rate=4.734 (57 out of 1,204) recall=94.735
+SVM (aggregate all): video error rate=4.153 (50 out of 1,204) recall=95.304
+NN (aggregate videos):video error rate=4.817 (58 out of 1,204) recall=94.790
+SVM (aggregate videos): video error rate=4.485 (54 out of 1,204) recall=95.330
+proposed(aggregate videos/all): video error rate=4.568 (55 out of 1,204) recall=95.025
+SVM (all): video error rate=4.319 (52 out of 1,204) recall=95.283 avg time=5.809(ms)
+proposed (*8, 10000): video error rate=3.821 (46 out of 1,204) recall=95.801 avg time=9.899(ms)
+(*8, 1000): 3.904
+(*8, 100): video error rate=3.904 (47 out of 1,204) recall=95.807 avg time=10.083(ms) prev time=76.750
+
+chi-squared:
+NN:video error rate=3.488 (42 out of 1,204) recall=96.335 avg time=17.430(ms) prev time=132.679
+MAP:video error rate=3.405 (41 out of 1,204) recall=96.424 avg time=16.561(ms) prev time=126.068
+proposed (10000,*8): video error rate=3.322 (40 out of 1,204) recall=96.582 avg time=16.368(ms) prev time=124.597
+
+
+
+LBPH
+Euclidean
+NN:video error rate=75.831 (913 out of 1,204) recall=22.677
+MAP: video error rate=74.502 (897 out of 1,204) recall=23.550
+SVM: video error rate=74.169 (893 out of 1,204) recall=21.406
+proposed (*8, 10000):video error rate=73.754 (888 out of 1,204) recall=25.017
+
+chi-squared
+NN: video error rate=69.020 (831 out of 1,204) recall=29.105 avg time=51.981(ms) prev time=395.686
+MAP: video error rate=67.525 (813 out of 1,204) recall=30.609 avg time=53.933(ms) prev time=410.544
+proposed (*4/6?, 10000):video error rate=66.279 (798 out of 1,204) recall=31.698 avg time=52.386(ms) prev time=398.769 
+(*4, 10000):
+
+extended (mirror+center equalize)
+Euclidean
+LBPH, NN: video error rate=72.674 (875 out of 1,204) recall=25.559 avg time (ms)=394.000
+LBPH, MAP:video error rate=71.678 (863 out of 1,204) recall=26.499 avg time (ms)=387.000
+LBPH, SVM (mirror only):video error rate=72.508 (873 out of 1,204) recall=22.960
+LBPH, SVM: video error rate=71.844 (865 out of 1,204) recall=23.217
+LBPH, proposed (*8, 10000): video error rate=71.096 (856 out of 1,204) recall=28.640 avg time (ms)=393.000
+
+
+chi-squared
+NN: video error rate=66.362 (799 out of 1,204) recall=31.694 avg time=164.278(ms) prev time=1,250.508
+MAP: video error rate=65.199 (785 out of 1,204) recall=32.767 avg time=158.470(ms) prev time=1,206.295
+proposed (*4, 10000): video error rate=65.033 (783 out of 1,204) recall=33.408 avg time=157.838(ms) prev time=1,201.483
+(*6, 10000) video error rate=64.867 (781 out of 1,204) recall=33.663 avg time=157.757(ms) prev time=1,200.867
+(*8, 10000) video error rate=65.532 (789 out of 1,204) recall=33.241 avg time=159.917(ms) prev time=1,217.310
+
+HOG
+Euclidean
+NN: video error rate=80.399 (968 out of 1,204) recall=19.596
+MAP: video error rate=76.246 (918 out of 1,204) recall=23.593
+SVM: video error rate=98.339 (1,184 out of 1,204) recall=0.885 avg time=5.428(ms) prev time=41.317
+proposed (*8, 10000):video error rate=72.093 (868 out of 1,204) recall=27.135
+
+chi-squared
+NN: video error rate=70.515 (849 out of 1,204) recall=27.696 avg time=9.841(ms) prev time=74.909
+MAP:rate=69.103 (832 out of 1,204) recall=29.221 avg time=9.832(ms) prev time=74.842
+proposed (*4/2, 10000):video error rate=67.691 (815 out of 1,204) recall=31.618 avg time=10.032(ms) prev time=76.361
+
+extended (mirror+center equalize)
+HOG, NN: video error rate=76.080 (916 out of 1,204) recall=23.984 avg time (ms)=193.000
+HOG, MAP: video error rate=72.093 (868 out of 1,204) recall=27.502 avg time (ms)=196.000
+HOG, SVM: video error rate=97.674 (1,176 out of 1,204) recall=1.593 avg time=7.276(ms) prev time=7.276
+HOG, proposed (*8, 10000):video error rate=68.106 (820 out of 1,204) recall=31.396 avg time (ms)=200.000
+
+chi-squared
+NN: video error rate=67.110 (808 out of 1,204) recall=31.395 avg time=28.645(ms) prev time=218.046
+MAP:video error rate=65.615 (790 out of 1,204) recall=32.947 avg time=28.727(ms) prev time=218.676
+proposed (*4, 10000):video error rate=64.950 (782 out of 1,204) recall=33.979 avg time=29.377(ms) prev time=223.622
+
+
+
+YTF/LFW
+my model
+orig (sum of distances in NN)
+total_videos=3353 1NN=50.6114% (1697)  5NN=66.776% (2239)  10NN=72.204% (2421)
+100NN=86.2511% (2892)  average_pos=76.8032
+
+orig (sum of probabs)
+DIST_SCALE=100 total_videos=3353 1NN=51.0588% (1712)  5NN=66.3585% (2225)  10NN=71.2795% (2390)
+  100NN=85.7441% (2875)  average_pos=77.6197
+
+cluster min_dist
+total_videos=3353 1NN=45.7501% (1534)  5NN=61.8849% (2075)  10NN=68.6251% (2301)
+  100NN=84.8792% (2846)  average_pos=85.5801
+
+proposed (all models)
+total_videos=3353 1NN=54.071% (1813)  5NN=68.983% (2313)  10NN=73.8741% (2477)
+100NN=87.4739% (2933)  average_pos=71.3931
+
+proposed (reduced - 128 models) 
+DIST_SCALE=10000 (DISTANCE_WEIGHT=1E2) total_videos=3353 1NN=54.071% (1813)  5NN=68.983% (2313)  10NN=73.8145% (2475)
+100NN=87.3248% (2928)  average_pos=75.4277
+DIST_SCALE=100 (DISTANCE_WEIGHT=1E4) total_videos=3353 1NN=54.3096% (1821)  5NN=67.9988% (2280)  10NN=73.5163% (2465)
+  100NN=86.9371% (2915)  average_pos=75.7757
+
+cluster proposed (reduced - 128 models) 
+DISTANCE_WEIGHT=1E4 total_videos=3353 1NN=48.3149% (1620)  5NN=63.9427% (2144)  10NN=70.504% (2364)
+ 100NN=85.595% (2870)  average_pos=84.3806
+
+proposed (reduced - 128 models)-average frame
+total_videos=3353 1NN=53.9219% (1808)  5NN=68.9234% (2311)  10NN=73.8741% (2477)
+  100NN=87.3248% (2928)  average_pos=75.4673 
+
+proposed (reduced - 128 models) - 5 first frames to initialize
+total_videos=3353 1NN=54.0113% (1811)  5NN=68.8339% (2308)  10NN=73.6057% (2468)
+  100NN=85.4459% (2865)  average_pos=81.9168
+
+log_weight = 4*5*1.0 / class_count & all frames:
+total_videos=3353 1NN=54.8166% (1838)  5NN=70.3847% (2360)  10NN=75.1268% (2519)
+  100NN=87.4143% (2931)  average_pos=74.2884
+
+
+with noise
+level 5
+orig:
+total_videos=3,353 1NN=48.971% 5NN=64.509% 10NN=71.130% 100NN=85.267%
+
+orig (sum of probabs):
+total_videos=3353 1NN=49.5676% (1662)  5NN=65.1953% (2186)  10NN=71.5479% (2399)
+  100NN=85.4459% (2865)  average_pos=78.1888
+
+proposed:
+total_videos=3353 1NN=52.9377% (1775)  5NN=67.4322% (2261)  10NN=72.9794% (2447)
+  100NN=84.5511% (2835)  average_pos=84.7089
+
+level 10
+orig:
+total_videos=3,353 1NN=44.080% 5NN=59.976% 10NN=66.716% 100NN=83.269%
+
+orig (sum of probabs):
+total_videos=3353 1NN=44.7361% (1500)  5NN=60.6024% (2032)  10NN=67.2532% (2255)
+  100NN=83.6863% (2806)  average_pos=86.3782
+
+proposed:
+total_videos=3353 1NN=47.3307% (1587)  5NN=62.1235% (2083)  10NN=68.8935% (2310)
+  100NN=81.5091% (2733)  average_pos=95.7859
+1000: total_videos=3353 1NN=48.0465% (1611)  5NN=62.541% (2097)  10NN=69.4602% (2329)
+ 100NN=82.7915% (2776)  average_pos=94.0498
+
+vgg
+
+Euclidean
+orig (sum of distances in NN)
+total_videos=3353 1NN=43.3642% (1454)  5NN=61.0498% (2047)  10NN=67.283% (2256)
+ 100NN=84.5511% (2835)  average_pos=84.473
+
+orig (sum of probabs)
+total_videos=3353 1NN=43.3343% (1453)  5NN=61.0796% (2048)  10NN=67.2234% (2254)
+  100NN=84.5511% (2835)  average_pos=84.4605
+
+cluster min_dist
+total_videos=3353 1NN=40.3817% (1354)  5NN=57.8288% (1939)  10NN=63.4954% (2129)
+  100NN=82.7319% (2774)  average_pos=91.705
+
+proposed (all models)
+total_videos=3353 1NN=44.408% (1489)  5NN=61.8849% (2075)  10NN=67.6409% (2268)
+ 100NN=85.1178% (2854)  average_pos=82.2669
+
+proposed (reduced - 128 models) 
+total_videos=3353 1NN=44.408% (1489)  5NN=61.8849% (2075)  10NN=67.6409% (2268)
+ 100NN=85.1178% (2854)  average_pos=83.8384
+DIST_SCALE=100 (DISTANCE_WEIGHT=1E4) total_videos=3353 1NN=44.7062% (1499)  5NN=62.1533% (2084)  10NN=68.1181% (2284)
+  100NN=85.2073% (2857)  average_pos=83.6943
+DISTANCE_WEIGHT=1E5 total_videos=3353 1NN=45.5413% (1527)  5NN=62.6603% (2101)  10NN=68.6549% (2302)
+  100NN=85.2669% (2859)  average_pos=83.7882
+
+new result
+total_videos=3353 1NN=47.0027% (1576)  5NN=64.1217% (2150)  10NN=70.2058% (2354)
+  100NN=85.8634% (2879)  average_pos=82.2577
+5 frames:
+total_videos=3353 1NN=46.9132% (1573)  5NN=63.9726% (2145)  10NN=69.8181% (2341)
+  100NN=84.2827% (2826)  average_pos=89.666
+
+cluster proposed (reduced - 128 models) 
+DISTANCE_WEIGHT=1E5 total_videos=3353 1NN=41.187% (1381)  5NN=58.3656% (1957)  10NN=64.1217% (2150)
+ 100NN=83.1494% (2788)  average_pos=91.1217
+
+
+log_weight = x*1.0 / class_count & all frames:
+x=1:
+total_videos=3353 1NN=44.9746% (1508)  5NN=62.4515% (2094)  10NN=69.0426% (2315)
+  100NN=85.1775% (2856)  average_pos=83.5503
+
+x=2:
+total_videos=3353 1NN=45.9588% (1541)  5NN=63.1673% (2118)  10NN=69.5795% (2333)
+  100NN=85.4459% (2865)  average_pos=83.011
+
+x=4:
+total_videos=3353 1NN=47.0027% (1576)  5NN=64.1217% (2150)  10NN=70.2058% (2354)
+  100NN=85.8634% (2879)  average_pos=82.2577
+
+x=6:
+total_videos=3353 1NN=47.0623% (1578)  5NN=64.6287% (2167)  10NN=70.4146% (2361)
+  100NN=85.9231% (2881)  average_pos=81.8712
+
+x=7:
+total_videos=3353 1NN=47.2413% (1584)  5NN=64.8673% (2175)  10NN=70.5935% (2367)
+  100NN=85.9827% (2883)  average_pos=81.7352
+
+x=8:
+total_videos=3353 1NN=47.3009% (1586)  5NN=64.9269% (2177)  10NN=70.7128% (2371)
+  100NN=85.9827% (2883)  average_pos=81.657
+
+x=9:
+total_videos=3353 1NN=47.2711% (1585)  5NN=64.8076% (2173)  10NN=70.8321% (2375)
+  100NN=85.9827% (2883)  average_pos=81.6039
+
+x=10:
+total_videos=3353 1NN=46.8536% (1571)  5NN=64.8076% (2173)  10NN=70.8321% (2375)
+  100NN=86.0424% (2885)  average_pos=81.5971
+
+x=15:
+total_videos=3353 1NN=44.9448% (1507)  5NN=63.7936% (2139)  10NN=69.7882% (2340)
+  100NN=85.9529% (2882)  average_pos=81.8551
+
+x=20:
+total_videos=3353 1NN=42.1115% (1412)  5NN=60.3042% (2022)  10NN=67.4023% (2260)
+  100NN=85.7441% (2875)  average_pos=82.9887
+
+x=6:
+total_videos=3353 1NN=48.3448% (1621)  5NN=65.0761% (2182)  10NN=70.9812% (2380)
+  100NN=84.4617% (2832)  average_pos=83.0101
+
+with noise:
+5
+orig:
+total_videos=3,353 1NN=44.110% 5NN=61.736% 10NN=67.880% 100NN=84.462%
+total_videos=3353 1NN=44.0501% (1477)  5NN=61.7358% (2070)  10NN=67.79% (2273)
+100NN=84.581% (2836)  average_pos=85.1402
+
+orig (sum of probabs)
+total_videos=3353 1NN=44.1396% (1480)  5NN=61.9744% (2078)  10NN=67.969% (2279)
+ 100NN=84.7003% (2840)  average_pos=84.9058
+total_videos=3353 1NN=45.422% (1523)  5NN=62.9287% (2110)  10NN=68.7444% (2305)
+ 100NN=84.7897% (2843)  average_pos=84.2109
+
+proposed (128):
+awfull?
+total_videos=3353 1NN=49.7465% (1668)  5NN=66.7462% (2238)  10NN=72.1443% (2419)
+  100NN=84.4319% (2831)  average_pos=84.2332
+total_videos=3353 1NN=47.7781% (1602)  5NN=64.241% (2154)  10NN=70.3549% (2359)
+ 100NN=84.4319% (2831)  average_pos=84.6457
+
+10
+orig:
+total_videos=3353 1NN=42.3501% (1420)  5NN=59.9463% (2010)  10NN=66.3585% (2225)
+  100NN=83.9248% (2814)  average_pos=88.8986
+
+orig (sum of probabs)
+total_videos=3353 1NN=42.708% (1432)  5NN=60.1551% (2017)  10NN=66.4778% (2229)
+ 100NN=83.895% (2813)  average_pos=88.6406
+total_videos=3353 1NN=43.8712% (1471)  5NN=61.0796% (2048)  10NN=67.2234% (2254)
+  100NN=84.1336% (2821)  average_pos=87.7256
+
+proposed (128):
+awfull?
+total_videos=3353 1NN=48.5237% (1627)  5NN=64.748% (2171)  10NN=70.6531% (2369)
+ 100NN=83.895% (2813)  average_pos=88.1775
+total_videos=3353 1NN=45.8097% (1536)  5NN=62.3621% (2091)  10NN=68.297% (2290)
+ 100NN=83.895% (2813)  average_pos=88.6269
+
+20
+orig:
+total_videos=3,353 1NN=36.505% 5NN=54.548% 10NN=61.080% 100NN=81.121%
+total_videos=3353 1NN=36.5344% (1225)  5NN=54.578% (1830)  10NN=61.1393% (2050)
+ 100NN=81.1214% (2720)  average_pos=102.265
+
+orig (sum of probabs)
+total_videos=3353 1NN=38.0555% (1276)  5NN=55.9201% (1875)  10NN=62.2428% (2087)
+  100NN=81.5986% (2736)  average_pos=99.2535
+
+proposed:
+total_videos=3353 1NN=42.7378% (1433)  5NN=60.2147% (2019)  10NN=66.0901% (2216)
+  100NN=81.1214% (2720)  average_pos=101.155
+
+all frames & log_weight = 8*1.0 / class_count:
+M=1:
+total_videos=3353 1NN=43.3642% (1454)  5NN=61.02% (2046)  10NN=67.283% (2256)  1
+00NN=84.5511% (2835)  average_pos=84.4817
+
+M=2:
+total_videos=3353 1NN=46.8536% (1571)  5NN=61.02% (2046)  10NN=67.283% (2256)  1
+00NN=84.5511% (2835)  average_pos=84.4468
+
+M=4:
+total_videos=3353 1NN=47.122% (1580)  5NN=61.02% (2046)  10NN=67.283% (2256)  10
+0NN=84.5511% (2835)  average_pos=84.4005
+
+M=8:
+total_videos=3353 1NN=47.3904% (1589)  5NN=63.7936% (2139)  10NN=67.283% (2256)
+ 100NN=84.5511% (2835)  average_pos=84.2759
+
+M=16:
+total_videos=3353 1NN=47.3606% (1588)  5NN=65.0164% (2180)  10NN=70.0268% (2348)
+  100NN=84.5511% (2835)  average_pos=84.0385
+
+M=32:
+total_videos=3353 1NN=47.3606% (1588)  5NN=65.0761% (2182)  10NN=70.8619% (2376)
+  100NN=84.5511% (2835)  average_pos=83.6033
+
+M=64:
+total_videos=3353 1NN=47.3009% (1586)  5NN=64.8971% (2176)  10NN=70.8023% (2374)
+  100NN=84.5511% (2835)  average_pos=82.8891
+
+M=all:
+total_videos=3353 1NN=47.3009% (1586)  5NN=64.8673% (2175)  10NN=70.683% (2370)
+ 100NN=87.0265% (2918)  average_pos=70.7056
+
+
+
+
+color:
+orig:
+total_videos=3353 1NN=46.7343% (1567)  5NN=63.4954% (2129)  10NN=69.7882% (2340)
+  100NN=85.595% (2870)  average_pos=79.7444
+
+orig (sum of probabs):
+total_videos=3353 1NN=47.6886% (1599)  5NN=64.748% (2171)  10NN=70.4742% (2363)
+ 100NN=85.6845% (2873)  average_pos=79.0728
+
+proposed (128, all, 8/C):
+total_videos=3353 1NN=50.0746% (1679)  5NN=66.8953% (2243)  10NN=72.204% (2421)
+ 100NN=86.3108% (2894)  average_pos=78.2687
+
+
+
+
+chi-squared
+
+color:
+orig:
+total_videos=3353 1NN=45.6308% (1530)  5NN=63.2568% (2121)  10NN=69.3707% (2326)
+  100NN=85.3862% (2863)  average_pos=78.8855
+
+orig (sum of probabs):
+total_videos=3353 1NN=45.8992% (1539)  5NN=63.5848% (2132)  10NN=69.5198% (2331)
+  100NN=85.4757% (2866)  average_pos=78.4602
+
+proposed (128, all, 8/C):
+total_videos=3353 1NN=48.4044% (1623)  5NN=65.2848% (2189)  10NN=71.2795% (2390)
+  100NN=85.9231% (2881)  average_pos=77.6979
+
+
+
+
+orig (sum of distances in NN)
+total_videos=3353 1NN=43.901% (1472)  5NN=61.4077% (2059)  10NN=67.6409% (2268)
+ 100NN=84.9985% (2850)  average_pos=82.8524
+
+orig (sum of probabs)
+DIST_SCALE=1 total_videos=3353 1NN=44.7062% (1499)  5NN=61.6761% (2068)  10NN=67.79% (2273)
+100NN=84.4617% (2832)  average_pos=85.5854
+
+cluster min_dist
+total_videos=3353 1NN=41.3063% (1385)  5NN=58.306% (1955)  10NN=64.1813% (2152)
+ 100NN=83.0599% (2785)  average_pos=90.4494
+
+proposed (reduced - 128 models)
+total_videos=3353 1NN=44.8852% (1505)  5NN=62.3024% (2089)  10NN=68.6549% (2302)
+  100NN=85.416% (2864)  average_pos=82.2368
+total_videos=3353 1NN=44.9448% (1507)  5NN=62.3621% (2091)  10NN=68.6848% (2303)
+  100NN=85.416% (2864)  average_pos=82.2225
+total_videos=3353 1NN=45.0939% (1512)  5NN=62.5112% (2096)  10NN=68.7742% (2306)
+  100NN=85.5353% (2868)  average_pos=82.0981
+total_videos=3353 1NN=45.8694% (1538)  5NN=63.1673% (2118)  10NN=69.4304% (2328)
+  100NN=85.5652% (2869)  average_pos=82.1065
+DIST_SCALE=1 (DISTANCE_WEIGHT=1E6) total_videos=3353 1NN=48.2851% (1619)  5NN=63.6743% (2135)  10NN=68.9532% (2312)
+  100NN=85.3564% (2862)  average_pos=82.4327
+
+cluster proposed (reduced - 128 models) 
+total_videos=3353 1NN=41.7238% (1399)  5NN=58.7235% (1969)  10NN=64.8375% (2174)
+  100NN=83.567% (2802)  average_pos=89.9463
+
+
+log_weight = x*1.0 / class_count & all frames:
+x=1:
+total_videos=3353 1NN=44.7957% (1502)  5NN=62.3024% (2089)  10NN=69.2216% (2321)
+  100NN=85.3564% (2862)  average_pos=82.3257
+(10000) total_videos=3353 1NN=45.6606% (1531)  5NN=63.0778% (2115)  10NN=69.5497% (2332)
+  100NN=85.6248% (2871)  average_pos=81.7012
+
+x=4:
+total_videos=3353 1NN=46.1974% (1549)  5NN=64.2112% (2153)  10NN=70.504% (2364)
+ 100NN=86.102% (2887)  average_pos=80.9839
+(10000)total_videos=3353 1NN=48.2255% (1617)  5NN=65.4041% (2193)  10NN=71.1602% (2386)
+  100NN=86.3406% (2895)  average_pos=80.1321
+
+x=5:
+(10000)total_videos=3353 1NN=48.5535% (1628)  5NN=65.4638% (2195)  10NN=71.8163% (2408)
+  100NN=86.4002% (2897)  average_pos=79.9153
+
+x=6:
+(1000000)total_videos=3353 1NN=46.5851% (1562)  5NN=64.4497% (2161)  10NN=70.683% (2370)
+ 100NN=86.2213% (2891)  average_pos=80.592
+(10000)total_videos=3353 1NN=48.6728% (1632)  5NN=65.762% (2205)  10NN=71.9058% (2411)
+ 100NN=86.4599% (2899)  average_pos=79.782
+
+x=7:
+total_videos=3353 1NN=46.2869% (1552)  5NN=64.748% (2171)  10NN=70.7426% (2372)
+ 100NN=86.4002% (2897)  average_pos=80.479
+(10000) total_videos=3353 1NN=48.5535% (1628)  5NN=66.0006% (2213)  10NN=71.8461% (2409)
+  100NN=86.4301% (2898)  average_pos=79.7232
+
+x=8:
+(10000) total_videos=3353 1NN=48.4342% (1624)  5NN=65.9708% (2212)  10NN=71.9058% (2411)
+  100NN=86.4002% (2897)  average_pos=79.6964
+
+x=9:
+(10000) total_videos=3353 1NN=48.136% (1614)  5NN=65.9409% (2211)  10NN=71.4584% (2396)
+ 100NN=86.3704% (2896)  average_pos=79.7325
+
+x=10:
+total_videos=3353 1NN=45.5115% (1526)  5NN=64.6287% (2167)  10NN=70.5935% (2367)
+  100NN=86.4002% (2897)  average_pos=80.3463
+(10000)total_videos=3353 1NN=47.3009% (1586)  5NN=65.3445% (2191)  10NN=71.0707% (2383)
+  100NN=86.3704% (2896)  average_pos=79.8336
+
+x=12:
+(10000) total_videos=3353 1NN=46.4957% (1559)  5NN=64.3603% (2158)  10NN=70.3847% (2360)
+  100NN=86.3108% (2894)  average_pos=80.0737
+
+x=15:
+(10000) total_videos=3353 1NN=44.6168% (1496)  5NN=62.7796% (2105)  10NN=69.4304% (2328)
+  100NN=86.2809% (2893)  average_pos=80.6403
+
+
+all frames & log_weight = 6*1.0 / class_count:
+M=1:
+total_videos=3353 1NN=43.9308% (1473)  5NN=61.3779% (2058)  10NN=67.6409% (2268)
+  100NN=84.9985% (2850)  average_pos=82.8512
+
+M=2:
+total_videos=3353 1NN=47.3307% (1587)  5NN=61.3779% (2058)  10NN=67.6409% (2268)
+  100NN=84.9985% (2850)  average_pos=82.8172
+
+M=4:
+total_videos=3353 1NN=48.4939% (1626)  5NN=61.3779% (2058)  10NN=67.6409% (2268)
+  100NN=84.9985% (2850)  average_pos=82.7462
+
+M=8:
+total_videos=3353 1NN=48.6132% (1630)  5NN=64.3305% (2157)  10NN=67.6409% (2268)
+  100NN=84.9985% (2850)  average_pos=82.6197
+
+M=16:
+total_videos=3353 1NN=48.6728% (1632)  5NN=65.7024% (2203)  10NN=70.8917% (2377)
+  100NN=84.9985% (2850)  average_pos=82.374
+
+M=32:
+total_videos=3353 1NN=48.6728% (1632)  5NN=65.762% (2205)  10NN=71.8759% (2410)
+ 100NN=84.9985% (2850)  average_pos=81.9231
+
+all:
+total_videos=3353 1NN=48.6728% (1632)  5NN=65.762% (2205)  10NN=71.9058% (2411)
+ 100NN=87.2651% (2926)  average_pos=69.7859
+
+with noise:
+5
+orig:
+total_videos=3353 1NN=43.6027% (1462)  5NN=61.4077% (2059)  10NN=67.5514% (2265)
+  100NN=84.2827% (2826)  average_pos=84.705
+
+orig (sum of probabs):
+total_videos=3353 1NN=44.1992% (1482)  5NN=61.8849% (2075)  10NN=67.9392% (2278)
+  100NN=84.3126% (2827)  average_pos=84.1861
+
+proposed log_weight = 6*1.0 / class_count & all frames:
+total_videos=3353 1NN=46.5851% (1562)  5NN=63.5848% (2132)  10NN=69.1619% (2319)
+  100NN=84.9687% (2849)  average_pos=83.3928
+
+10
+orig:
+total_videos=3353 1NN=41.4256% (1389)  5NN=59.8867% (2008)  10NN=65.5831% (2199)
+  100NN=83.5371% (2801)  average_pos=88.8559
+
+orig (sum of probabs):
+total_videos=3353 1NN=42.1414% (1413)  5NN=60.0358% (2013)  10NN=65.8515% (2208)
+  100NN=83.6863% (2806)  average_pos=88.2824
+
+proposed log_weight = 6*1.0 / class_count & all frames:
+total_videos=3353 1NN=44.6168% (1496)  5NN=61.4375% (2060)  10NN=67.79% (2273)
+100NN=84.4319% (2831)  average_pos=87.4074
+
+
+20
+orig:
+total_videos=3,353 1NN=35.610% 5NN=53.266% 10NN=60.543% 100NN=80.942%
+
+orig (sum of probabs):
+total_videos=3353 1NN=36.0871% (1210)  5NN=53.9517% (1809)  10NN=60.9603% (2044)
+  100NN=81.1214% (2720)  average_pos=102.103
+
+proposed log_weight = 6*1.0 / class_count & all frames:
+total_videos=3353 1NN=38.3835% (1287)  5NN=56.4867% (1894)  10NN=62.541% (2097)
+ 100NN=80.9424% (2714)  average_pos=102.313
+
+
+
+my C
+orig (sum of distances)
+total_videos=3353 1NN=64.569% (2165)  5NN=75.0671% (2517)  10NN=78.2583% (2624)
+ 100NN=87.6827% (2940)  average_pos=85.9708
+
+proposed
+total_videos=3353 1NN=67.462% (2262)  5NN=77.5127% (2599)  10NN=80.4056% (2696)
+ 100NN=88.9949% (2984)  average_pos=75.3129
+
+reduced
+total_videos=3353 1NN=67.1339% (2251)  5NN=76.9162% (2579)  10NN=79.8091% (2676)
+  100NN=87.0564% (2919)  average_pos=92.5497
+
+
+
+orig C
+orig (sum of distances)
+total_videos=3,353 1NN=64.420% 5NN=74.769% 10NN=77.393% 100NN=87.146%
+total_videos=3353 1NN=64.4199% (2160)  5NN=74.7689% (2507)  10NN=77.3934% (2595)
+  100NN=87.1458% (2922)  average_pos=93.6358
+
+orig (sum of probabs):
+total_videos=3353 1NN=65.4339% (2194)  5NN=75.2162% (2522)  10NN=78.0793% (2618)
+  100NN=87.5634% (2936)  average_pos=90.8589
+
+proposed (all)
+total_videos=3353 1NN=67.3725% (2259)  5NN=76.9758% (2581)  10NN=80.4653% (2698)
+  100NN=88.3388% (2962)  average_pos=83.2777
+
+proposed (128)
+total_videos=3353 1NN=66.9848% (2246)  5NN=76.3794% (2561)  10NN=79.8091% (2676)
+  100NN=86.5494% (2902)  average_pos=100.154
+
+proposed:
+total_videos=3353 1NN=65.6427% (2201)  5NN=74.5899% (2501)  10NN=77.7513% (2607)
+  100NN=85.8038% (2877)  average_pos=101.797
+total_videos=3353 1NN=66.1199% (2217)  5NN=74.9776% (2514)  10NN=78.1688% (2621)
+  100NN=86.3406% (2895)  average_pos=100.861
+all frames
+total_videos=3353 1NN=66.4778% (2229)  5NN=75.4846% (2531)  10NN=78.8249% (2643)
+  100NN=87.6528% (2939)  average_pos=92.8327
+
+
+log_weight = 4*5*1.0 / class_count:
+total_videos=3353 1NN=67.462% (2262)  5NN=76.618% (2569)  10NN=80.3758% (2695)
+100NN=88.4879% (2967)  average_pos=85.1423
+
+128:
+total_videos=3353 1NN=67.462% (2262)  5NN=76.6478% (2570)  10NN=80.3758% (2695)
+ 100NN=87.9511% (2949)  average_pos=92.1345
+
+128 & 5 frames:
+total_videos=3353 1NN=67.1041% (2250)  5NN=76.0811% (2551)  10NN=79.6898% (2672)
+  100NN=86.4599% (2899)  average_pos=100.248
+
+
+all frames & log_weight = 4*x*1.0 / class_count:
+x=1:
+total_videos=3353 1NN=66.4778% (2229)  5NN=75.4846% (2531)  10NN=78.8249% (2643)
+  100NN=87.6528% (2939)  average_pos=92.8327
+
+x=3:
+total_videos=3353 1NN=67.3427% (2258)  5NN=76.3197% (2559)  10NN=79.8688% (2678)
+  100NN=87.8616% (2946)  average_pos=92.3528
+
+x=5:
+total_videos=3353 1NN=67.462% (2262)  5NN=76.6478% (2570)  10NN=80.3758% (2695)
+ 100NN=87.9511% (2949)  average_pos=92.1345
+
+x=6:
+total_videos=3353 1NN=67.6409% (2268)  5NN=76.8565% (2577)  10NN=80.346% (2694)
+ 100NN=87.9511% (2949)  average_pos=92.0758
+
+x=7:
+total_videos=3353 1NN=67.6111% (2267)  5NN=76.9758% (2581)  10NN=80.6144% (2703)
+  100NN=87.9511% (2949)  average_pos=92.0239
+
+x=8:
+total_videos=3353 1NN=67.5216% (2264)  5NN=77.0355% (2583)  10NN=80.5249% (2700)
+  100NN=87.9511% (2949)  average_pos=91.9916
+
+x=9:
+total_videos=3353 1NN=67.4023% (2260)  5NN=77.0057% (2582)  10NN=80.4056% (2696)
+  100NN=87.9213% (2948)  average_pos=91.9896
+
+x=10:
+total_videos=3353 1NN=67.1041% (2250)  5NN=76.8864% (2578)  10NN=80.2565% (2691)
+  100NN=87.9213% (2948)  average_pos=91.9937
+
+x=12:
+total_videos=3353 1NN=66.6865% (2236)  5NN=76.7671% (2574)  10NN=80.0775% (2685)
+  100NN=87.9213% (2948)  average_pos=92.0382
+x=15:
+total_videos=3353 1NN=66.1497% (2218)  5NN=76.4987% (2565)  10NN=79.9881% (2682)
+  100NN=87.8914% (2947)  average_pos=92.1813
+
+proposed 1000
+
+1, 5 first:
+total_videos=3353 1NN=58.7235% (1969)  5NN=71.3391% (2392)  10NN=74.7689% (2507)
+  100NN=85.8038% (2877)  average_pos=102.871
+
+2:
+total_videos=3353 1NN=66.0901% (2216)  5NN=74.7689% (2507)  10NN=77.3934% (2595)
+  100NN=87.1458% (2922)  average_pos=93.6191
+5 first:
+total_videos=3353 1NN=62.3024% (2089)  5NN=71.3391% (2392)  10NN=74.7689% (2507)
+  100NN=85.8038% (2877)  average_pos=102.835
+
+8:
+5 first:
+total_videos=3353 1NN=65.2252% (2187)  5NN=72.7707% (2440)  10NN=74.7689% (2507)
+  100NN=85.8038% (2877)  average_pos=102.681
+
+16:
+5 first:
+total_videos=3353 1NN=65.4339% (2194)  5NN=73.8145% (2475)  10NN=76.2601% (2557)
+  100NN=85.8038% (2877)  average_pos=102.525
+
+32:
+5 first:
+total_videos=3353 1NN=65.762% (2205)  5NN=74.232% (2489)  10NN=77.0951% (2585)
+100NN=85.8038% (2877)  average_pos=102.263
+
+64:
+5 first:
+total_videos=3353 1NN=66.0901% (2216)  5NN=74.8285% (2509)  10NN=77.8407% (2610)
+  100NN=85.8038% (2877)  average_pos=101.681
+
+128:
+total_videos=3353 1NN=66.1199% (2217)  5NN=74.9776% (2514)  10NN=78.1688% (2621)
+  100NN=86.3406% (2895)  average_pos=100.861
+
+5 first:
+total_videos=3353 1NN=66.1199% (2217)  5NN=74.9776% (2514)  10NN=78.1688% (2621)
+  100NN=86.3406% (2895)  average_pos=100.861
+
+256:
+total_videos=3353 1NN=66.2988% (2223)  5NN=75.246% (2523)  10NN=78.4969% (2632)
+ 100NN=87.116% (2921)  average_pos=99.4393
+
+512:
+5 first:
+total_videos=3353 1NN=66.4181% (2227)  5NN=75.425% (2529)  10NN=78.6758% (2638)
+ 100NN=87.5037% (2934)  average_pos=97.3934
+
+(all)
+total_videos=3353 1NN=66.4778% (2229)  5NN=75.4846% (2531)  10NN=78.8249% (2643)
+  100NN=87.7721% (2943)  average_pos=89.3922
+5 first:
+
+
+noise
+
+level 5
+orig:
+total_videos=3,353 1NN=62.273% 5NN=73.457% 10NN=76.171% 100NN=86.639%
+
+orig (sum of probabs):
+total_videos=3353 1NN=62.8989% (2109)  5NN=73.7847% (2474)  10NN=76.8267% (2576)
+  100NN=87.116% (2921)  average_pos=94.8941
+
+proposed:
+total_videos=3353 1NN=63.0182% (2113)  5NN=73.4566% (2463)  10NN=76.3495% (2560)
+  100NN=84.8196% (2844)  average_pos=105.748
+
+log_weight = 4*5*1.0 / class_count:
+total_videos=3353 1NN=65.7024% (2203)  5NN=75.3355% (2526)  10NN=79.1232% (2653)
+  100NN=87.3546% (2929)  average_pos=96.0435
+
+level 10
+orig:
+total_videos=3353 1NN=57.1429% (1916)  5NN=69.669% (2336)  10NN=73.0689% (2450)
+ 100NN=84.909% (2847)  average_pos=106.185
+
+orig (sum of probabs):
+total_videos=3353 1NN=58.4551% (1960)  5NN=70.4742% (2363)  10NN=73.7548% (2473)
+  100NN=85.2371% (2858)  average_pos=103.14
+
+proposed:
+total_videos=3353 1NN=58.7832% (1971)  5NN=69.7882% (2340)  10NN=73.1584% (2453)
+  100NN=82.9108% (2780)  average_pos=115.497
+
+log_weight = 4*5*1.0 / class_count:
+total_videos=3353 1NN=61.3182% (2056)  5NN=72.4128% (2428)  10NN=76.0215% (2549)
+  100NN=86.1616% (2889)  average_pos=95.3003
+
+level 20:
+orig:
+total_videos=3353 1NN=44.1992% (1482)  5NN=58.1867% (1951)  10NN=62.9585% (2111)
+  100NN=78.1986% (2622)  average_pos=138.721
+
+orig (sum of probabs):
+total_videos=3353 1NN=45.2132% (1516)  5NN=59.4691% (1994)  10NN=64.0919% (2149)
+  100NN=79.1232% (2653)  average_pos=133.872
+
+proposed (all frames):
+total_videos=3353 1NN=46.7641% (1568)  5NN=60.7814% (2038)  10NN=65.255% (2188)
+ 100NN=79.4811% (2665)  average_pos=136.956
+
+log_weight = 4*5*1.0 / class_count & (all frames):
+total_videos=3353 1NN=48.1956% (1616)  5NN=61.4673% (2061)  10NN=66.0304% (2214
+  100NN=79.8688% (2678)  average_pos=136.013
+
+video as image
+my model
+orig (sum of distances in NN)=orig (sum of probabs)
+total_videos=122756 1NN=46.9484% (57632)  5NN=63.6507% (78135)  10NN=69.8133% (8
+5700)  100NN=85.8044% (105330)  average_pos=85.7922
+
+
+proposed (all models)
+
+proposed (reduced - 128 models) 
+DISTANCE_WEIGHT=1E4 total_videos=122756 1NN=49.218% (60418)  5NN=65.6571% (80598)  10NN=71.4254% (87
+679)  100NN=86.4675% (106144)  average_pos=84.5934
+
+
+vgg
+
+Euclidean
+orig (sum of distances in NN)=orig (sum of probabs)
+total_videos=122756 1NN=40.508% (49726)  5NN=58.9429% (72356)  10NN=65.6212% (80
+554)  100NN=84.2753% (103453)  average_pos=86.4908
+
+
+proposed (all models)
+
+proposed (reduced - 128 models) 
+DISTANCE_WEIGHT=1E5 total_videos=122756 1NN=41.2754% (50668)  5NN=59.571% (73127)  10NN=66.2135% (81
+281)  100NN=84.6272% (103885)  average_pos=85.9755
+
+
+chi-squared
+orig (sum of distances in NN)=orig (sum of probabs)
+total_videos=122756 1NN=41.2957% (50693)  5NN=59.6199% (73187)  10NN=66.2257% (8
+1296)  100NN=84.668% (103935)  average_pos=83.9494
+
+proposed (all models)
+
+proposed (reduced - 128 models) 
+DISTANCE_WEIGHT=1E6 total_videos=122756 1NN=42.0501% (51619)  5NN=60.27% (73985)  10NN=66.791% (8199
+0)  100NN=84.9457% (104276)  average_pos=83.4729
+
+
+pubfig
+DISTANCE_WEIGHT = 100
+FRACTION = 0.005 (100 models)
+
+
+
+
+
+IJB-A
+
+VGG
+fc6
+Euclidean
+orig (sum)
+total_videos=2043 1NN=68.3309% (1396)  5NN=80.4209% (1643)  10NN=84.2389% (1721)
+  100NN=94.6647% (1934)  average_pos=15.7592
+total_videos=2043 1NN=69.3588% (1417)  5NN=80.8125% (1651)  10NN=84.6794% (1730)
+  100NN=95.0073% (1941)  average_pos=14.9139
+
+orig (MAP)
+total_videos=2043 1NN=68.5267% (1400)  5NN=80.4209% (1643)  10NN=84.2389% (1721)
+  100NN=94.7137% (1935)  average_pos=15.5707
+total_videos=2043 1NN=72.1977% (1475)  5NN=85.022% (1737)  10NN=87.9589% (1797)
+ 100NN=96.9652% (1981)  average_pos=10.2996
+32 first:
+total_videos=2043 1NN=71.6593% (1464)  5NN=83.7983% (1712)  10NN=86.0989% (1759)
+  100NN=94.6647% (1934)  average_pos=15.2349
+
+proposed:
+total_videos=2043 1NN=70.0441% (1431)  5NN=81.3999% (1663)  10NN=84.7773% (1732)
+  100NN=94.9094% (1939)  average_pos=14.6402
+all+MAP:
+total_videos=2043 1NN=72.6872% (1485)  5NN=85.2178% (1741)  10NN=88.0078% (1798)
+  100NN=97.0631% (1983)  average_pos=9.69212
+32+MAP:
+total_videos=2043 1NN=72.5893% (1483)  5NN=83.9941% (1716)  10NN=86.3436% (1764)
+  100NN=94.6647% (1934)  average_pos=15.164
+128+map:
+total_videos=2043 1NN=72.7851% (1487)  5NN=84.7283% (1731)  10NN=87.5673% (1789)
+  100NN=95.2521% (1946)  average_pos=13.6794
+
+
+fc7
+Euclidean
+orig (sum)
+total_videos=2043 1NN=70.8762% (1448)  5NN=83.6025% (1708)  10NN=86.882% (1775)
+ 100NN=97.6016% (1994)  average_pos=8.36955
+
+orig (MAP)
+total_videos=2043 1NN=72.883% (1489)  5NN=85.8052% (1753)  10NN=89.3294% (1825)
+ 100NN=98.6784% (2016)  average_pos=5.91679
+
+32 first:
+total_videos=2043 1NN=72.7851% (1487)  5NN=85.2668% (1742)  10NN=88.4484% (1807)
+  100NN=97.6016% (1994)  average_pos=8.01517
+
+proposed:
+total_videos=2043 1NN=73.2256% (1496)  5NN=86.1478% (1760)  10NN=89.8189% (1835)
+  100NN=97.8953% (2000)  average_pos=6.94322
+32:
+total_videos=2043 1NN=73.1278% (1494)  5NN=85.6583% (1750)  10NN=88.8889% (1816)
+  100NN=97.6016% (1994)  average_pos=7.95595
+
+chi-squared
+orig (sum)
+total_videos=2043 1NN=67.5477% (1380)  5NN=79.393% (1622)  10NN=83.5536% (1707)
+ 100NN=94.42% (1929)  average_pos=17.4116
+
+orig (MAP)
+total_videos=2043 1NN=67.7925% (1385)  5NN=79.5888% (1626)  10NN=83.6025% (1708)
+  100NN=94.5179% (1931)  average_pos=17.2237
+total_videos=2043 1NN=69.163% (1413)  5NN=80.372% (1642)  10NN=84.4836% (1726)
+100NN=94.8605% (1938)  average_pos=15.6422
+32 first:
+total_videos=2043 1NN=69.5056% (1420)  5NN=80.6167% (1647)  10NN=84.5326% (1727)
+  100NN=94.42% (1929)  average_pos=17.1537
+
+proposed:
+total_videos=2043 1NN=69.4567% (1419)  5NN=80.5678% (1646)  10NN=84.3368% (1723)
+  100NN=94.7137% (1935)  average_pos=16.2301
+all+MAP:
+total_videos=2043 1NN=70.8762% (1448)  5NN=81.4978% (1665)  10NN=85.2668% (1742)
+  100NN=95.301% (1947)  average_pos=14.5233
+32+MAP:
+total_videos=2043 1NN=71.3656% (1458)  5NN=81.9383% (1674)  10NN=85.1689% (1740)
+  100NN=94.42% (1929)  average_pos=16.954
+128+map:
+total_videos=2043 1NN=71.6104% (1463)  5NN=82.3789% (1683)  10NN=85.6583% (1750)
+  100NN=94.7137% (1935)  average_pos=15.8933
+
+LCNN (C)
+VGG
+orig (sum)
+total_videos=2043 1NN=42.1929% (862)  5NN=58.835% (1202)  10NN=66.6177% (1361)
+100NN=88.9868% (1818)  average_pos=32.5149
+
+orig (MAP)
+total_videos=2043 1NN=46.5002% (950)  5NN=62.1145% (1269)  10NN=68.9183% (1408)
+ 100NN=90.2105% (1843)  average_pos=29.6862
+32 first:
+total_videos=2043 1NN=46.5981% (952)  5NN=61.9187% (1265)  10NN=68.7714% (1405)
+ 100NN=88.9868% (1818)  average_pos=31.9726
+
+proposed:
+total_videos=2043 1NN=43.6613% (892)  5NN=61.0866% (1248)  10NN=68.0372% (1390)
+ 100NN=89.721% (1833)  average_pos=30.6579
+all+MAP:
+total_videos=2043 1NN=47.0387% (961)  5NN=63.0935% (1289)  10NN=69.9951% (1430)
+ 100NN=90.8957% (1857)  average_pos=28.2766
+
+32+MAP:
+total_videos=2043 1NN=47.5281% (971)  5NN=63.1424% (1290)  10NN=69.7504% (1425)
+ 100NN=88.9868% (1818)  average_pos=31.7274
+128+map:
+total_videos=2043 1NN=47.8218% (977)  5NN=63.9256% (1306)  10NN=70.6804% (1444)
+ 100NN=89.8189% (1835)  average_pos=30.0568
+
+
+
+
+fuzzy decoding:
+YTF/LFW
+LCNN:
+total_videos=3353 1NN=63.6743% (2135)  5NN=74.1127% (2485)  10NN=76.946% (2580)
+ 100NN=86.5195% (2901)  average_pos=87.4808 time(ms)=0
+vs proposed: total_videos=3353 1NN=67.5514% (2265)  5NN=76.8565% (2577)  10NN=80.5846% (2702)  100NN=87.1458% (2922)  average_pos=92.7021 time(ms)=0
+median:total_videos=3,353 1NN=64.987% 5NN=75.157% 10NN=77.960% 100NN=87.355%
+
+VGG L2:
+total_videos=3353 1NN=45.9588% (1541)  5NN=61.7954% (2072)  10NN=66.3585% (2225)
+  100NN=81.4196% (2730)  average_pos=94.2118 time(ms)=0
+vs proposed: total_videos=3353 1NN=48.3448% (1621)  5NN=65.0164% (2180)  10NN=70.3549% (2359) 100NN=84.4617% (2832)  average_pos=82.7316 time(ms)=0
+median:total_videos=3,353 1NN=45.094% 5NN=61.616% 10NN=68.237% 100NN=85.058%
+
+VGG chi-squared (color)
+total_videos=3353 1NN=46.108% (1546)  5NN=60.6919% (2035)  10NN=65.4936% (2196)
+ 100NN=83.2985% (2793)  average_pos=84.501 time(ms)=0
+vs proposed: total_videos=3353 1NN=51.357% (1722)  5NN=68.0585% (2282)  10NN=73.6952% (2471) 100NN=85.3862% (2863)  average_pos=77.2783 time(ms)=0
+median:total_videos=3,353 1NN=45.362% 5NN=61.825% 10NN=68.327% 100NN=85.177%
+
+
+
+resnet:
+euclidean:
+total_videos=3353 1NN=32.7468% (1098)  5NN=50.8202% (1704)  10NN=59.4095% (1992)
+  100NN=83.5073% (2800)  average_pos=78.6621 time(ms)=0
+
+median:total_videos=3353 1NN=33.1643% (1112)  5NN=51.1184% (1714)  10NN=59.1411% (1983)
+  100NN=83.5371% (2801)  average_pos=78.5613 time(ms)=0
+
+MAP:
+total_videos=3353 1NN=33.2538% (1115)  5NN=51.6254% (1731)  10NN=59.7674% (2004)
+  100NN=83.8354% (2811)  average_pos=77.3143 time(ms)=0
+
+
+proposed (*28):
+total_videos=3353 1NN=34.2976% (1150)  5NN=53.0271% (1778)  10NN=61.2288% (2053)
+  100NN=83.5073% (2800)  average_pos=77.4172 time(ms)=0
+propsed median: total_videos=3353 1NN=34.2678% (1149)  5NN=53.2359% (1785)  10NN=61.3779% (2058)
+  100NN=83.5371% (2801)  average_pos=77.4831 time(ms)=0
+
+
+chi-squared:
+NN:
+total_videos=3353 1NN=34.2976% (1150)  5NN=52.9973% (1777)  10NN=60.9603% (2044)
+  100NN=83.7161% (2807)  average_pos=76.7987 time(ms)=0
+
+MAP:
+total_videos=3353 1NN=34.8047% (1167)  5NN=53.6236% (1798)  10NN=61.6165% (2066)
+  100NN=84.3424% (2828)  average_pos=75.6964 time(ms)=0
+
+median:
+total_videos=3,353 1NN=34.477% 5NN=53.743% 10NN=61.020% 100NN=84.163%
+
+MAP median:
+total_videos=3353 1NN=34.4766% (1156)  5NN=53.7429% (1802)  10NN=61.02% (2046)
+100NN=84.1634% (2822)  average_pos=75.8926 time(ms)=0
+
+proposed:
+total_videos=3353 1NN=37.1608% (1246)  5NN=56.278% (1887)  10NN=64.062% (2148)
+100NN=83.7161% (2807)  average_pos=75.4128 time(ms)=0
+
+proposed median: total_videos=3353 1NN=36.2959% (1217)  5NN=55.9797% (1877)  10NN=63.5848% (2132)
+  100NN=84.1933% (2823)  average_pos=74.8118 time(ms)=0
+
+IJB-A
+LCNN:
+total_videos=2043 1NN=7.83162% (160)  5NN=26.5296% (542)  10NN=39.3539% (804)  100NN=85.6583% (1750)  average_pos=45.2844 time(ms)=0
+vs proposed: total_videos=2043 1NN=47.7729% (976)  5NN=63.6319% (1300)  10NN=70.4356% (1439) 100NN=88.9868% (1818)  average_pos=31.1185 time(ms)=0
+median:total_videos=2,043 1NN=32.110% 5NN=49.829% 10NN=57.905% 100NN=85.218%
+
+VGG (fc7) L2:
+total_videos=2043 1NN=33.8718% (692)  5NN=58.2477% (1190)  10NN=68.5267% (1400)
+ 100NN=95.3989% (1949)  average_pos=17.7856 time(ms)=0
+vs proposed: total_videos=2043 1NN=72.3935% (1479)  5NN=85.8052% (1753)  10NN=89.721% (1833) 100NN=97.6016% (1994)  average_pos=7.41557 time(ms)=0
+median:total_videos=2,043 1NN=65.394% 5NN=80.078% 10NN=84.288% 100NN=97.161%
+
+VGG chi-squared (color)
+total_videos=2043 1NN=24.4738% (500)  5NN=42.1929% (862)  10NN=52.7166% (1077)
+100NN=90.1126% (1841)  average_pos=34.3382 time(ms)=0
+
+vs proposed: 
+log_weight=6: total_videos=3353 1NN=51.357% (1722)  5NN=68.0585% (2282)  10NN=73.6952% (2471) 100NN=85.3862% (2863)  average_pos=77.2783 time(ms)=0
+log_weight=1: total_videos=2043 1NN=71.4635% (1460)  5NN=82.1831% (1679)  10NN=85.5115% (1747)  100NN=94.42% (1929)  average_pos=16.5296 time(ms)=0
+median:total_videos=2,043 1NN=66.079% 5NN=80.910% 10NN=85.316% 100NN=97.161%
+
+
+
+
+resnet:
+euclidean:
+total_videos=2043 1NN=55.8982% (1142)  5NN=73.6662% (1505)  10NN=80.372% (1642)
+ 100NN=96.231% (1966)  average_pos=13.3656 time(ms)=0
+
+MAP:
+total_videos=2043 1NN=56.9261% (1163)  5NN=75.3304% (1539)  10NN=81.7425% (1670)
+  100NN=96.8674% (1979)  average_pos=12.0695 time(ms)=0
+median:
+total_videos=2,043 1NN=51.884% 5NN=71.561% 10NN=78.414% 100NN=95.301%
+
+proposed:
+total_videos=2043 1NN=58.4435% (1194)  5NN=76.2604% (1558)  10NN=82.281% (1681)
+ 100NN=96.231% (1966)  average_pos=12.6011 time(ms)=0
+
+chi-squared:
+NN:
+total_videos=2043 1NN=58.1498% (1188)  5NN=75.722% (1547)  10NN=82.1831% (1679)
+ 100NN=96.4758% (1971)  average_pos=12.6309 time(ms)=0
+
+MAP:
+total_videos=2043 1NN=59.814% (1222)  5NN=76.7988% (1569)  10NN=83.211% (1700)
+100NN=96.8184% (1978)  average_pos=11.5193 time(ms)=0
+
+proposed:
+total_videos=2043 1NN=60.793% (1242)  5NN=77.4351% (1582)  10NN=83.6515% (1709)
+ 100NN=96.4758% (1971)  average_pos=12.1287 time(ms)=0
+
+
+
+
+SVM
+YTF
+LCNN: total_videos=3,353 1NN=12.496% 5NN=17.358% 10NN=17.656% 100NN=22.129%
+128 pca:total_videos=3,353 1NN=13.779% 5NN=18.938% 10NN=19.147% 100NN=23.382%
+
+VGG: total_videos=3,353 1NN=9.902% 5NN=13.987% 10NN=14.494% 100NN=19.147%
+256 pca: total_videos=3,353 1NN=12.795% 5NN=16.672% 10NN=17.059% 100NN=21.593%
+
+resnet:total_videos=3,353 1NN=8.530% 5NN=12.675% 10NN=13.331% 100NN=17.894%
+256 pca: total_videos=3,353 1NN=8.947% 5NN=13.212% 10NN=13.779% 100NN=18.461%
+256 pca (probabs): 
+
+
+IJB-A
+LCNN: total_videos=2,043 1NN=18.404% 5NN=33.382% 10NN=34.900% 100NN=47.822%
+256 pca rbf:=2,043 1NN=15.761% 5NN=30.739% 10NN=39.501% 100NN=90.064%
+256 pca linear: 2,043 1NN=28.341% 5NN=50.808% 10NN=61.429% 100NN=89.623%
+
+all: total_videos=2,043 1NN=32.012% 5NN=49.535% 10NN=52.325% 100NN=62.898%
+
+
+VGG: total_videos=2,043 1NN=56.241% 5NN=70.191% 10NN=70.876% 100NN=76.750%
+256 pca: total_videos=2,043 1NN=65.345% 5NN=78.071% 10NN=78.953% 100NN=83.554%
+256 pca linear (no probab): total_videos=2,043 1NN=64.464% 5NN=77.141% 10NN=78.267% 100NN=83.456%
+all probabs:total_videos=2,043 1NN=15.027% 5NN=30.396% 10NN=39.843% 100NN=90.896%
+256 pca probabs (linear):total_videos=2,043 1NN=58.443% 5NN=77.827% 10NN=84.337% 100NN=97.161%
+256 pca rbf (probab): total_videos=2,043 1NN=15.761% 5NN=30.739% 10NN=39.501% 100NN=90.064%
+
+libsvm prob: total_videos=2,043 1NN=15.027% 5NN=30.396% 10NN=39.843% 100NN=90.896%
+
+
+
+resnet: total_videos=2,043 1NN=44.298% 5NN=63.436% 10NN=64.905% 100NN=71.659%
+256 pca: total_videos=2,043 1NN=46.011% 5NN=64.562% 10NN=66.226% 100NN=72.883%
+
+
+
+MLP:
+YTF: 
+LCNN
+(probabs)total_videos=3,353 1NN=25.112% 5NN=34.029% 10NN=37.012% 100NN=49.061%
+128 pca (probabs):total_videos=3,353 1NN=5.846% 5NN=7.337% 10NN=8.649% 100NN=19.177%
+all RPROP: total_videos=3,353 1NN=5.577% 5NN=10.766% 10NN=13.659% 100NN=27.110%
+
+VGG:
+256 pca (probabs):total_videos=3,353 1NN=11.631% 5NN=15.061% 10NN=16.045% 100NN=25.500%
+256 pca (voting):total_videos=3,353 1NN=11.333% 5NN=14.345% 10NN=14.673% 100NN=18.670%
+256 pca RPROP: total_videos=3,353 1NN=17.596% 5NN=29.198% 10NN=35.133% 100NN=61.438%
+
+resnet:
+256 pca (probabs)+RPROP:total_videos=3,353 1NN=13.838% 5NN=26.543% 10NN=33.015% 100NN=59.141%
+
+
+IJB-A
+LCNN:
+256 pca (probabs):total_videos=2,043 1NN=25.012% 5NN=38.571% 10NN=44.542% 100NN=72.638%
+all (probabs): total_videos=2,043 1NN=35.095% 5NN=51.297% 10NN=58.297% 100NN=81.351%
+all (SV): 
+
+VGG: 
+all: total_videos=2,043 1NN=26.774% 5NN=40.284% 10NN=45.962% 100NN=71.708%
+256 pca (probabs):total_videos=2,043 1NN=72.247% 5NN=81.791% 10NN=84.973% 100NN=94.567%
+256 pca (voting): total_videos=2,043 1NN=69.457% 5NN=79.589% 10NN=80.764% 100NN=85.316%
+
+resnet:
+all (probabs):total_videos=2,043 1NN=51.150% 5NN=63.926% 10NN=69.016% 100NN=85.903%
+256 pca (probabs):total_videos=2,043 1NN=49.388% 5NN=65.981% 10NN=71.708% 100NN=88.155% 
+
+256 pca RPROP: total_videos=2,043 1NN=53.793% 5NN=73.128% 10NN=77.876% 100NN=86.588%
+
+
+
+
+
+center-face (ydwen)
+YTF:
+NN: total_videos=3,353 1NN=47.629% 5NN=64.360% 10NN=70.206% 100NN=85.923%
+
+MLP:
+all:total_videos=3,353 1NN=2.953% 5NN=5.607% 10NN=6.949% 100NN=14.793%
+128 pca:total_videos=3,353 1NN=18.461% 5NN=35.759% 10NN=43.692% 100NN=71.160%
+
+SVM:
+all: 
+256 pca:total_videos=3,353 1NN=2.356% 5NN=6.800% 10NN=11.482% 100NN=23.203%
+
+proposed (*1, dw=1000):total_videos=3353 1NN=49.5676% (1662)  5NN=65.762% (2205)  10NN=71.2795% (2390)
+ 100NN=85.9231% (2881)  average_pos=72.9651 time(ms)=0
+(*6, dw=100):total_videos=3353 1NN=51.7447% (1735)  5NN=67.8497% (2275)  10NN=72.6812% (2437)
+  100NN=85.9231% (2881)  average_pos=72.3102 time(ms)=0
+
+
+
+IJB-A
+NN:
+total_videos=2,043 1NN=35.193% 5NN=53.353% 10NN=62.310% 100NN=90.113%
+
+MLP:
+all:total_videos=2,043 1NN=5.384% 5NN=10.181% 10NN=12.775% 100NN=32.305%
+128 pca:total_videos=2,043 1NN=23.495% 5NN=44.934% 10NN=54.626% 100NN=73.862%
+
+SVM:
+all: total_videos=2,043 1NN=17.915% 5NN=41.948% 10NN=53.255% 100NN=89.721%
+256 pca:total_videos=2,043 1NN=17.915% 5NN=41.948% 10NN=53.255% 100NN=89.721%
+
+proposed (*1):
+total_videos=2043 1NN=37.9344% (775)  5NN=55.7513% (1139)  10NN=64.0235% (1308)
+ 100NN=91.0426% (1860)  average_pos=29.6089 time(ms)=0
+
+dw=1000, *1: total_videos=2043 1NN=39.6476% (810)  5NN=57.024% (1165)  10NN=65.7856% (1344)
+100NN=90.1126% (1841)  average_pos=30.1243 time(ms)=0
+
+
+
+
+resnet (vgg2)
+YTF:
+NN: total_videos=3353 1NN=74.8583% (2510)  5NN=83.1792% (2789)  10NN=85.2967% (2860)
+  100NN=90.6949% (3041)  average_pos=60.0343 time(ms)=0
+
+MAP:total_videos=3353 1NN=75.0075% (2515)  5NN=83.4178% (2797)  10NN=85.3266% (2861)
+  100NN=90.6651% (3040)  average_pos=60.062 time(ms)=0
+
+MLP:
+all:total_videos=3,353 1NN=1.700% 5NN=3.102% 10NN=3.788% 100NN=9.931%
+256 pca: total_videos=3,353 1NN=23.859% 5NN=34.656% 10NN=39.934% 100NN=64.987%
+128 pca:total_videos=3,353 1NN=47.182% 5NN=65.076% 10NN=71.399% 100NN=85.983%
+
+SVM:
+all: total_videos=3,353 1NN=9.335% 5NN=18.640% 10NN=20.638% 100NN=23.680%
+256 pca:total_videos=3,353 1NN=11.005% 5NN=19.744% 10NN=21.115% 100NN=22.398%
+
+proposed (*1, dw=1000):total_videos=3353 1NN=75.1864% (2521)  5NN=83.5073% (2800)  10NN=85.416% (2864)
+ 100NN=90.6949% (3041)  average_pos=59.9863 time(ms)=0
+(*6, dw=100):total_videos=3353 1NN=75.5145% (2532)  5NN=83.6863% (2806)  10NN=85.5353% (2868)
+  100NN=90.6949% (3041)  average_pos=59.8774 time(ms)=0
+
+(*40, dw=1000)video error rate=24.008 (805 out of 3,353) recall=74.249 //accuracy 75,992 (2548)
+
+10000:
+*8: video error rate=24.993 (838 out of 3,353) recall=73.321 avg time=22.820(ms) prev time=423.639
+*40: video error rate=24.277 (814 out of 3,353) recall=73.907 avg time=22.700(ms) prev time=421.409
+
+1000
+*4: video error rate=25.022 (839 out of 3,353) recall=73.327 avg time=23.018(ms) prev time=427.297
+*8: video error rate=24.873 (834 out of 3,353) recall=73.448 avg time=22.611(ms) prev time=419.748
+*28:video error rate=24.277 (814 out of 3,353) recall=73.992 avg time=29.074(ms) prev time=539.724
+*40: video error rate=24.008 (805 out of 3,353) recall=74.249 avg time=22.581(ms) prev time=419.197
+*64: video error rate=23.740 (796 out of 3,353) recall=74.412 avg time=22.539(ms) prev time=418.410
+*80: video error rate=23.501 (788 out of 3,353) recall=74.613 avg time=22.610(ms) prev time=419.728
+*100:video error rate=23.263 (780 out of 3,353) recall=74.791 avg time=22.761(ms) prev time=422.533
+*120: video error rate=23.293 (781 out of 3,353) recall=74.776 avg time=22.677(ms) prev time=420.972
+
+1000, *100
+M=1:25.291 (848 out of 3,353) recall=72.765 avg time=14.651(ms)
+M=2: 23.889 (801 out of 3,353) recall=74.270 avg time=15.260(ms) prev time=283.290
+M=4: 23.501 (788 out of 3,353) recall=74.555 avg time=15.149(ms) prev time=281.233
+M=8: 23.263 (780 out of 3,353) recall=74.797 avg time=15.483(ms)
+M=16:23.412 (785 out of 3,353) recall=74.665 avg time=16.477(ms)
+M=32:23.352 (783 out of 3,353) recall=74.749 avg time=18.301(ms)
+M=64:23.263 (780 out of 3,353) recall=74.791 avg time=22.761(ms) prev time=422.533
+23.263 (780 out of 3,353) recall=74.791 avg time=22.746(ms)
+M=128:23.352 (783 out of 3,353) recall=74.739 avg time=30.343(ms)
+M=256:23.352 (783 out of 3,353) recall=74.739 avg time=46.094(ms)
+
+100
+*64:video error rate=23.829 (799 out of 3,353) recall=74.333 avg time=22.616(ms) prev time=419.839
+
+
+chi-squared
+1000
+*4:
+*8:video error rate=24.068 (807 out of 3,353) recall=73.962 avg time=31.159(ms) prev time=578.440
+*28:video error rate=23.024 (772 out of 3,353) recall=74.887 avg time=41.198(ms) prev time=764.790
+*40:video error rate=22.875 (767 out of 3,353) recall=75.036 avg time=31.166(ms) prev time=578.562
+*64: video error rate=22.607 (758 out of 3,353) recall=75.266 avg time=31.191(ms) prev time=579.035
+*80:video error rate=22.815 (765 out of 3,353) recall=75.160 avg time=36.025(ms) prev time=668.759
+*100:video error rate=23.054 (773 out of 3,353) recall=74.828 avg time=31.220(ms) prev time=579.561
+*120:video error rate=23.293 (781 out of 3,353) recall=74.758 avg time=31.165(ms) prev time=578.553
+
+1000, *64
+M=1:24.694 (828 out of 3,353) recall=73.293 avg time=23.707(ms)
+M=2:23.024 (772 out of 3,353) recall=74.832 avg time=23.730(ms)
+M=4:22.517 (755 out of 3,353) recall=75.382 avg time=23.945(ms)
+M=8:22.517 (755 out of 3,353) recall=75.392 avg time=24.340(ms)
+M=16:22.577 (757 out of 3,353) recall=75.298 avg time=25.770(ms)
+M=32:22.607 (758 out of 3,353) recall=75.266 avg time=29.141(ms)
+M=64: 22.607 (758 out of 3,353) recall=75.266 avg time=31.191(ms)
+22.607 (758 out of 3,353) recall=75.266 avg time=31.924(ms)
+M=128: 22.577 (757 out of 3,353) recall=75.298 avg time=40.294(ms)
+M=256: 22.577 (757 out of 3,353) recall=75.298 avg time=55.649(ms)
+
+
+
+IJB-A
+NN:
+total_videos=2043 1NN=75.722% (1547)  5NN=86.5884% (1769)  10NN=90.9447% (1858)
+ 100NN=99.3637% (2030)  average_pos=3.99706 time(ms)=0
+total_videos=2043 1NN=86.2947% (1763)  5NN=93.2452% (1905)  10NN=95.1052% (1943)
+  100NN=99.4126% (2031)  average_pos=2.2418 time(ms)=0
+video error rate=13.705 (280 out of 2,043) recall=87.209
+avg video: video error rate=13.901 (284 out of 2,043) recall=86.980 avg time (ms)=16.000
+
+MAP:total_videos=2043 1NN=75.4283% (1541)  5NN=86.4415% (1766)  10NN=90.8468% (1856)
+  100NN=99.3637% (2030)  average_pos=3.99902 time(ms)=0
+total_videos=2043 1NN=86.6373% (1770)  5NN=93.9305% (1919)  10NN=95.7905% (1957)
+  100NN=99.6574% (2036)  average_pos=1.90896 time(ms)=0
+
+MLP:total_videos=2,043 1NN=25.893% 5NN=33.578% 10NN=36.613% 100NN=49.241%
+256 pca:total_videos=2,043 1NN=84.484% 5NN=93.000% 10NN=94.860% 100NN=98.140%
+128 pca:total_videos=2,043 1NN=84.239% 5NN=93.392% 10NN=95.399% 100NN=98.042%
+
+SVM:total_videos=2,043 1NN=64.905% 5NN=85.609% 10NN=90.406% 100NN=98.532%
+256 pca:total_videos=2,043 1NN=65.247% 5NN=86.295% 10NN=90.700% 100NN=98.629%
+
+proposed (*1):total_videos=2043 1NN=87.5673% (1789)  5NN=94.0773% (1922)  10NN=96.0352% (1962)
+  100NN=99.4126% (2031)  average_pos=1.98483 time(ms)=0
+
+(*6): total_videos=2043 1NN=87.9099% (1796)  5NN=94.7137% (1935)  10NN=96.1821% (1965)
+  100NN=99.4126% (2031)  average_pos=1.88204 time(ms)=0
+video error rate=12.873 (263 out of 2,043) recall=87.994 avg time (ms)=171.000
+avg video (8): video error rate=13.754 (281 out of 2,043) recall=87.271 avg time (ms)=18.000 
+
+LBPH, NN: video error rate=90.455 (1,848 out of 2,043) recall=7.513 avg time=29.000(ms)
+LBPH, MAP: video error rate=88.791 (1,814 out of 2,043) recall=9.758 avg time=28.893(ms) prev time=288.439
+LBPH, SVM: video error rate=92.462 (1,889 out of 2,043) recall=5.053 avg time (ms)=2,199.000
+LBPH, proposed (*8, 10000):video error rate=90.357 (1,846 out of 2,043) recall=9.013 avg time=29.798(ms) prev time=297.469
+
+HOG, NN: video error rate=91.385 (1,867 out of 2,043) recall=6.934 avg time (ms)=144.000
+HOG, MAP: video error rate=89.134 (1,821 out of 2,043) recall=9.348 avg time (ms)=145.000
+HOG, SVM: video error rate=99.608 (2,035 out of 2,043) recall=0.200 avg time (ms)=1,033.000
+HOG, proposed (*8, 10000):video error rate=86.833 (1,774 out of 2,043) recall=12.150 avg time (ms)=159.000
+
+extended (mirror+center equalize)
+LBPH, NN: method 0 video error rate=88.106 (1,800 out of 2,043) recall=9.655 avg time=84.935(ms) prev time=847.899
+LBPH, MAP: method 1 video error rate=88.106 (1,800 out of 2,043) recall=10.037 avg time=84.903(ms) prev time=847.575
+LBPH, SVM: 
+LBPH, proposed (*8, 10000):video error rate=88.106 (1,800 out of 2,043) recall=9.655 avg time=85.589(ms) prev time=854.420
+
+HOG, NN: video error rate=88.595 (1,810 out of 2,043) recall=9.354 avg time=42.523(ms) prev time=424.504
+HOG, MAP: 
+HOG, SVM: video error rate=99.608 (2,035 out of 2,043) recall=0.200 avg time=104.804(ms) prev time=104.804
+HOG, proposed (*8, 10000):video error rate=86.686 (1,771 out of 2,043) recall=12.207 avg time=44.026(ms) prev time=439.510
+
+
+
+
+
+mobilenet (vgg2)
+YTF:
+NN: total_videos=3353 1NN=53.7429% (1802)  5NN=68.983% (2313)  10NN=74.6794% (2504)
+ 100NN=87.7721% (2943)  average_pos=69.858 time(ms)=0
+
+MAP:total_videos=3353 1NN=54.6376% (1832)  5NN=69.5198% (2331)  10NN=75.5741% (2534)
+  100NN=87.9213% (2948)  average_pos=69.164 time(ms)=0
+
+MLP:
+all:total_videos=3,353 1NN=1.700% 5NN=4.056% 10NN=5.846% 100NN=16.552%
+128 pca:total_videos=3,353 1NN=21.682% 5NN=38.384% 10NN=45.601% 100NN=73.576%
+
+SVM:
+all: total_videos=3,353 1NN=6.949% 5NN=16.105% 10NN=18.759% 100NN=22.487%
+128 pca:total_videos=3,353 1NN=8.470% 5NN=16.284% 10NN=17.894% 100NN=21.742%
+
+proposed (*1, dw=10000):total_videos=3353 1NN=55.7113% (1868)  5NN=70.1461% (2352)  10NN=76.0811% (2551)
+  100NN=87.7721% (2943)  average_pos=69.4157 time(ms)=0
+(*1, dw=100000):total_videos=3353 1NN=58.0972% (1948)  5NN=71.7865% (2407)  10NN=76.4092% (2562)
+  100NN=87.7721% (2943)  average_pos=68.9994 time(ms)=0
+
+(*6, dw=10000):total_videos=3353 1NN=58.4253% (1959)  5NN=72.5321% (2432)  10NN=77.5723% (2601)
+  100NN=87.7721% (2943)  average_pos=68.6874 time(ms)=0
+(*6, dw=1000):total_videos=3353 1NN=57.9779% (1944)  5NN=72.204% (2421)  10NN=77.6916% (2605)
+ 100NN=87.7721% (2943)  average_pos=68.7823 time(ms)=0
+
