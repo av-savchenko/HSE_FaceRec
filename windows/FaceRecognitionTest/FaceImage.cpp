@@ -201,18 +201,21 @@ FaceImage::FaceImage(int* p, int w, int h, const std::string& pName, int pW, int
 	initHistos(p);
 }		
 #ifdef USE_DNN_FEATURES
-FaceImage::FaceImage(std::string fn, std::string pn, std::vector<float>& features) :
+FaceImage::FaceImage(std::string fn, std::string pn, std::vector<float>& features, bool normalize) :
 fileName(fn),personName(pn),featureVector(FEATURES_COUNT)
 {
-	float sum = 0;
+	float sum = 1;
+	if (normalize) {
+		sum = 0;
 #if DISTANCE!=EUC
-	for (int i = 0; i < FEATURES_COUNT; ++i)
-		sum += features[i];
+		for (int i = 0; i < FEATURES_COUNT; ++i)
+			sum += features[i];
 #else
-	for (int i = 0; i < FEATURES_COUNT; ++i)
-		sum += features[i] * features[i];
-	sum = sqrt(sum);
+		for (int i = 0; i < FEATURES_COUNT; ++i)
+			sum += features[i] * features[i];
+		sum = sqrt(sum);
 #endif
+	}
 	for (int i = 0; i < FEATURES_COUNT; ++i)
 		featureVector[i] = features[i] / sum;
 }

@@ -21,11 +21,6 @@ class my_numpunct: public std::numpunct<char> {
     std::string do_grouping() const { return "\3"; } 
 };  
 
-void test();
-int main_detect();
-void doClustering();
-void testClassification();
-void testSIFT();
 void testVideoRecognition();
 void testRecognitionOfMultipleImages();
 
@@ -35,11 +30,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	std::locale nl(std::locale(), new my_numpunct);  
     std::cout.imbue(nl); 
     std::cout.setf(std::ios::fixed); 
-	std::cout.precision(3);
+	std::cout.precision(5);
 
 	//srand(time(0));
 	srand(54321);
-	//example();
 #if 0
 	testClassification();
 #elif 0

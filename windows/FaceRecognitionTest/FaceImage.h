@@ -69,7 +69,7 @@ public:
 	FaceImage(const char* imageFileName, const std::string& personName = "", int pointsInW = POINTS_IN_W, int pointsInH = POINTS_IN_H, int rndImageRange = 0, ImageTransform img_transform = ImageTransform::NONE);
 	FaceImage(cv::Mat& img, const std::string& personName = "", int pointsInW = POINTS_IN_W, int pointsInH = POINTS_IN_H);
 #ifdef USE_DNN_FEATURES
-	FaceImage(std::string fileName, std::string personName, std::vector<float>& features);
+	FaceImage(std::string fileName, std::string personName, std::vector<float>& features, bool normalize=true);
 	static FaceImage* readFaceImage(std::ifstream& file);
 	void writeFaceImage(std::ofstream& file);
 #endif

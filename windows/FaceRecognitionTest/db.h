@@ -98,11 +98,11 @@ const std::string BASE_DIR = IMAGE_DIR+"lfw_ytf\\";
 const std::string DB = BASE_DIR+"lfw_cropped";
 const std::string TEST = "";
 const float FRACTION = 0.5;
-const std::string FEATURES_FILE_NAME = BASE_DIR +
+const std::string FEATURES_FILE_NAME = BASE_DIR +"lfw_"+
 #ifdef USE_RGB_DNN
-//"dnn_vgg_features.txt";
-"dnn_vgg2_features.txt";
-//"dnn_vgg_features.txt";
+//"vgg_features.txt";
+"vgg2_features.txt";
+//"res101_features.txt";
 #else
 "dnn_features.txt";
 #endif
@@ -120,8 +120,8 @@ IMAGE_DIR+"pubfig83\\dnn_features.txt";
 #endif
 #elif DB_USED == USE_IJBA
 const std::string BASE_DIR = IMAGE_DIR +
-"ijba\\1N_sets\\split2\\";
-//"ijba\\1N_images\\";
+//"ijba\\1N_sets\\split2\\";
+"ijba\\1N_images\\";
 
 const std::string DB = BASE_DIR +"gallery";
 const std::string TEST = "";
@@ -145,7 +145,7 @@ const float FRACTION = 0.5;
 
 typedef std::map<std::string, std::vector<FaceImage*> > MapOfFaces;
 void loadFaces(MapOfFaces& totalImages);
-void getTrainingAndTestImages(const MapOfFaces& totalImages, std::vector<FaceImage*>& faceImages, std::vector<FaceImage*>& testImages,bool randomize=true);
-void getTrainingAndTestImages(const MapOfFaces& totalImages, MapOfFaces& faceImages, MapOfFaces& testImages, bool randomize = true);
+void getTrainingAndTestImages(const MapOfFaces& totalImages, std::vector<FaceImage*>& faceImages, std::vector<FaceImage*>& testImages,bool randomize=true, float fraction=FRACTION);
+void getTrainingAndTestImages(const MapOfFaces& totalImages, MapOfFaces& faceImages, MapOfFaces& testImages, bool randomize = true, float fraction = FRACTION);
 
 #endif //__DB_H__

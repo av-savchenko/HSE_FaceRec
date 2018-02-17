@@ -11,6 +11,9 @@
 #include <map>
 #include <unordered_map>
 #include <chrono>
+#include <sstream>
+#include <algorithm>
+#include <numeric>
 using namespace std;
 
 
@@ -37,16 +40,17 @@ const std::string VIDEO_FEATURES_FILE = VIDEO_DIR +
 "_lcnn_dnn_features.txt";
 #endif
 
-#if 0 //vgg L2, vgg2
+#if 1 //vgg L2, vgg2
 const double DISTANCE_WEIGHT = 1000;
-#elif 1 //lcnn, caffe center face, resnet-101
+#elif 0 //lcnn, caffe center face, resnet-101
 const double DISTANCE_WEIGHT = 100;
 #elif 1 //mobilenet, resnet L2 & chisq, vgg chisq, LBPH/HOG
 const double DISTANCE_WEIGHT = 10000;
 #else 
 const double DISTANCE_WEIGHT = 100000;
 #endif
-const double FEAT_COUNT_TO_N_RATIO = (FEATURES_COUNT - 1) / DISTANCE_WEIGHT;
+
+//#define AGGREGATE_VIDEOS
 
 void loadVideosFromDir(MapOfVideos& videoMap) {
 	WIN32_FIND_DATA ffd, ffd1, ffd2;
@@ -153,7 +157,7 @@ void loadVideos(MapOfVideos& dbVideos, std::string video_file= VIDEO_FEATURES_FI
 	}
 #if defined(USE_DNN_FEATURES)
 	while (ifs) {
-		/*if (dbVideos.size() > 100)
+		/*if (dbVideos.size() > 10)
 			break;*/
 		std::string fileName, personName, feat_str;
 		if (!getline(ifs, personName))
@@ -170,24 +174,7 @@ void loadVideos(MapOfVideos& dbVideos, std::string video_file= VIDEO_FEATURES_FI
 			ifs >> frames_count;
 			if (!getline(ifs, fileName))
 				break;
-#if 1
-
-			for (int j = 0; j < frames_count; ++j) {
-				if (!getline(ifs, fileName))
-					break;
-				if (!getline(ifs, feat_str))
-					break;
-				istringstream iss(feat_str);
-				vector<float> features(FEATURES_COUNT);
-				for (int i = 0; i < FEATURES_COUNT; ++i) {
-					iss >>features[i];
-				}
-				person_videos[i].push_back(new FaceImage(fileName, personName, features));
-				++total_images;
-
-				//cout << fileName << ' ' << personName << ' ' << features[0] << ' ' << features[FEATURES_COUNT - 1] << '\n';
-			}
-#else
+#ifdef AGGREGATE_VIDEOS
 			vector<float> features(FEATURES_COUNT);
 
 			for (int j = 0; j < frames_count; ++j) {
@@ -202,14 +189,28 @@ void loadVideos(MapOfVideos& dbVideos, std::string video_file= VIDEO_FEATURES_FI
 					features[i] += f;
 				}
 
-				//cout << fileName << ' ' << personName << ' ' << features[0] << ' ' << features[FEATURES_COUNT - 1] << '\n';
 			}
 			for (int i = 0; i < FEATURES_COUNT; ++i) {
 				features[i] /= frames_count;
 			}
 			person_videos[i].push_back(new FaceImage(fileName, personName, features));
 			++total_images;
+			
+#else
+			for (int j = 0; j < frames_count; ++j) {
+				if (!getline(ifs, fileName))
+					break;
+				if (!getline(ifs, feat_str))
+					break;
+				istringstream iss(feat_str);
+				vector<float> features(FEATURES_COUNT);
+				for (int i = 0; i < FEATURES_COUNT; ++i) {
+					iss >> features[i];
+				}
+				person_videos[i].push_back(new FaceImage(fileName, personName, features));
+				++total_images;
 
+			}
 #endif
 		}
 		total_videos += videos_count;
@@ -221,12 +222,189 @@ void loadVideos(MapOfVideos& dbVideos, std::string video_file= VIDEO_FEATURES_FI
 #endif
 }
 
+static unordered_map<string, string> closestFaces;
 
 
 
-unordered_map<string, unordered_map<string, float> > model_distances, model_probabs;
-typedef unordered_map<FaceImage*, unordered_map<FaceImage*, float>> distance_map;
-void compute_model_distances(MapOfFaces& totalImages, const vector<string>& commonNames, distance_map* dm=0) {
+
+class Classifier {
+public:
+	virtual ~Classifier() {}
+
+	virtual void train(MapOfFaces& pDb, const vector<string>& commonNames) { pDbImages = &pDb; }
+	virtual int get_correct_class_pos(const vector<FaceImage*>& video, string correctClassName) = 0;
+	string get_name() { return name; }
+private:
+	string name;
+
+protected:
+	void set_name(string n) { name = n; }
+	MapOfFaces* pDbImages;
+};
+
+template <typename T, template <typename, typename, typename...> class MapT, typename... AddParams>
+inline void sortDistances(vector<pair<string, T> >& distanceToClass, const MapT<string, T, AddParams...>& classDistances) {
+	transform(classDistances.begin(), classDistances.end(), distanceToClass.begin(),
+		[](const pair<std::string, T>& p) {
+		return make_pair(p.first, p.second);
+	}
+	);
+
+	sort(distanceToClass.begin(), distanceToClass.begin() + classDistances.size(),
+		[](const pair<string, T>& lhs, const pair<string, T>& rhs) {
+		return lhs.second < rhs.second; }
+	);
+}
+
+//=================================
+enum class FusionMethod{MEAN_DIST=0, MAP, MAX_POSTERIOR};
+class BruteForceClassifier :public Classifier {
+public:
+	BruteForceClassifier(FusionMethod fusion = FusionMethod::MEAN_DIST, int dist_weight=DISTANCE_WEIGHT);
+	virtual int get_correct_class_pos(const vector<FaceImage*>& video, string correctClassName);
+
+	virtual int processVideo(vector<unordered_map<string, double>>& videoClassDistances, string correctClassName);
+protected:
+	const FusionMethod fusion_method;
+	const int distance_weight;
+};
+BruteForceClassifier::BruteForceClassifier(FusionMethod fusion, int dist_weight):fusion_method(fusion), distance_weight(dist_weight)
+{
+	ostringstream os;
+	os << "BF "<< int(fusion_method);
+	set_name(os.str());
+}
+int BruteForceClassifier::get_correct_class_pos(const vector<FaceImage*>& video, string correctClassName) 
+{
+	MapOfFaces& faceImages= *pDbImages;
+	vector<unordered_map<string, double>> videoClassDistances(video.size());
+	for (int ind = 0; ind < video.size(); ++ind)
+	{
+		unordered_map<string, double>& frameDistances = videoClassDistances[ind];
+		for (MapOfFaces::iterator iter = faceImages.begin(); iter != faceImages.end(); ++iter) {
+			for (FaceImage* face : iter->second) {
+				float tmpDist = video[ind]->distance(face);
+				bool classNameExists = frameDistances.find(face->personName) != frameDistances.end();
+				if (!classNameExists || (classNameExists && frameDistances[face->personName] > tmpDist)) {
+					frameDistances[face->personName] = tmpDist;
+					closestFaces[face->personName] = face->fileName;
+				}
+			}
+		}
+	}
+	return processVideo(videoClassDistances, correctClassName);
+}
+
+int BruteForceClassifier::processVideo(vector<unordered_map<string, double>>& videoClassDistances, string correctClassName) {
+	int frames_count = videoClassDistances.size();
+	int class_count = videoClassDistances[0].size();
+	unordered_map<string, double> avg_frames, current_frame;
+	vector<pair<string, double>> distanceToClass(class_count);
+
+	if (fusion_method == FusionMethod::MEAN_DIST) {
+		avg_frames = videoClassDistances[0];
+		for (int i = 1; i < frames_count; ++i) {
+			for (auto person : videoClassDistances[i]) {
+				avg_frames[person.first] += person.second;
+			}
+		}
+	}
+	else {
+		for (auto person : videoClassDistances[0])
+			avg_frames.insert(make_pair(person.first, 0));
+
+		for (int i = 0; i < frames_count; ++i) {
+			double sum = 0, min_dist=1000000;
+			for (auto person : videoClassDistances[i]) {
+				sum += exp(-distance_weight*person.second);
+				if (person.second<min_dist)
+					min_dist = person.second;
+			}
+			for (auto person : videoClassDistances[i]) {
+#if 0
+					double probab = exp(-distance_weight*(person.second - min_dist));
+					if (fusion_method == FusionMethod::MAP)
+						avg_frames[person.first] -= probab;
+					else if (fusion_method == FusionMethod::MAX_POSTERIOR) {
+						if (avg_frames[person.first] > -probab)
+							avg_frames[person.first] = -probab;
+					}
+				}
+#else
+				
+				double probab = exp(-distance_weight*person.second) / sum;
+				if (fusion_method == FusionMethod::MAP)
+					avg_frames[person.first] -= probab;
+				else if (fusion_method == FusionMethod::MAX_POSTERIOR) {
+					/*if (avg_frames[person.first] > -probab)
+						avg_frames[person.first] = -probab;*/
+					avg_frames[person.first] += probab*(1 - avg_frames[person.first]);
+
+				}
+#endif
+			}
+		}
+	}
+	if (fusion_method == FusionMethod::MAX_POSTERIOR) {
+		for (auto& class_dist : avg_frames) {
+			class_dist.second *= -1;
+		}
+	}
+	int res = 0;
+#if 0
+	sortDistances(distanceToClass, avg_frames);
+	/*cout << "use_MAP="<<use_MAP << " size="<<distanceToClass.size()<<endl;
+	for (int i = 0; i < min(10,(int)distanceToClass.size()); ++i) {
+	cout << distanceToClass[i].first << '\t' << distanceToClass[i].second <<endl;
+	}
+	cout << endl;*/
+
+	for (; res < distanceToClass.size() && distanceToClass[res].first != correctClassName; ++res)
+		;
+	if (distanceToClass.empty())
+		res = 1;
+#else
+	string bestClass = "";
+	float bestDist = numeric_limits<float>::max();
+	for (auto& class_dist : avg_frames) {
+		if (class_dist.second < bestDist) {
+			bestDist = class_dist.second;
+			bestClass = class_dist.first;
+		}
+	}
+	res = (bestClass!= correctClassName);
+#endif
+	return res;
+}
+
+//=================================
+class MLDistClassifier :public BruteForceClassifier {
+public:
+	typedef unordered_map<FaceImage*, unordered_map<FaceImage*, float>> distance_map;
+	MLDistClassifier(double reg_weight = 8, int model_count = -1, distance_map* dm = 0);
+	virtual void train(MapOfFaces& pDb, const vector<string>& commonNames);
+
+	virtual int processVideo(vector<unordered_map<string, double>>& videoClassDistances, string correctClassName);
+private:
+	int max_features;
+	bool use_MAP;
+	double regularizer_weight;// = 8; 2, 1, 28, 6, 40;
+	int analyzed_models_count;// = 64;// 128;// 5;
+										//-1 = avg_frame_dists.size();
+
+	distance_map* dist_map;
+	unordered_map<string, unordered_map<string, float> > model_distances, model_probabs;
+};
+MLDistClassifier::MLDistClassifier(double reg_weight, int model_count, distance_map* dm) : regularizer_weight(reg_weight), analyzed_models_count(model_count), dist_map(dm) {
+	ostringstream os;
+	os << "ML distances reg=" << regularizer_weight<<" analyzed_models_count="<< analyzed_models_count;
+	set_name(os.str()); 
+}
+
+void MLDistClassifier::train(MapOfFaces& totalImages, const vector<string>& commonNames)
+{ 
+	BruteForceClassifier::train(totalImages, commonNames);
+	//compute model distances
 	double avg_same_dist = 0;
 	int same_count = 0;
 	for (string name : commonNames) {
@@ -238,7 +416,7 @@ void compute_model_distances(MapOfFaces& totalImages, const vector<string>& comm
 				if (size > 1) {
 					for (FaceImage* face : totalImages[name]) {
 						for (FaceImage* otherFace : totalImages[name]) {
-							float dist = (dm!=0)?(*dm)[otherFace][face]:otherFace->distance(face);
+							float dist = (dist_map != 0) ? (*dist_map)[otherFace][face] : otherFace->distance(face);
 							classDistance += dist;
 						}
 					}
@@ -282,71 +460,16 @@ void compute_model_distances(MapOfFaces& totalImages, const vector<string>& comm
 		}
 	}
 }
-template <typename T, template <typename, typename, typename...> class MapT, typename... AddParams>
-inline void sortDistances(vector<pair<string, T> >& distanceToClass, const MapT<string, T, AddParams...>& classDistances) {
-	transform(classDistances.begin(), classDistances.end(), distanceToClass.begin(),
-		[](const pair<std::string, T>& p) {
-		return make_pair(p.first, p.second);
-	}
-	);
 
-	sort(distanceToClass.begin(), distanceToClass.begin() + classDistances.size(),
-		[](const pair<string, T>& lhs, const pair<string, T>& rhs) {
-		return lhs.second < rhs.second; }
-	);
-}
-
-int processVideo_NN(vector<unordered_map<string, double>>& videoClassDistances, string correctClassName, bool use_MAP=false) {
+int MLDistClassifier::processVideo(vector<unordered_map<string, double>>& videoClassDistances, string correctClassName) {
 	int frames_count = videoClassDistances.size();
 	int class_count = videoClassDistances[0].size();
-	unordered_map<string, double> avg_frames, current_frame;
-	vector<pair<string, double>> distanceToClass(class_count);
-
-	if (!use_MAP) {
-		avg_frames = videoClassDistances[0];
-		for (int i = 1; i < frames_count; ++i) {
-			for (auto person : videoClassDistances[i]) {
-				avg_frames[person.first] += person.second;
-			}
-		}
-	}
-	else {
-		for (auto person : videoClassDistances[0])
-			avg_frames.insert(make_pair(person.first, 0));
-
-		for (int i = 0; i < frames_count; ++i) {
-			double sum = 0;
-			for (auto person : videoClassDistances[i]) {
-				sum += exp(-DISTANCE_WEIGHT*person.second);
-			}
-			for (auto person : videoClassDistances[i]) {
-				avg_frames[person.first] -= exp(-DISTANCE_WEIGHT*person.second) / sum;
-			}
-		}
-	}
-	sortDistances(distanceToClass, avg_frames);
-	int res = 0;
-	for (; res < distanceToClass.size() && distanceToClass[res].first != correctClassName; ++res)
-		;
-	return res;
-}
-static int regularizer_weight = 8; //2;
-//1;
-//28;
-//6;
-//40;
-
-static int analyzedModelsCount = 64;// 128;// 5;
-							 //-1 = avg_frame_dists.size();
-int processVideo_ML_dist(vector<unordered_map<string, double>>& videoClassDistances, string correctClassName) {
-	int frames_count = videoClassDistances.size();
-	int class_count = videoClassDistances[0].size();
-	double log_weight = 1.0 / (class_count)*regularizer_weight;
+	double log_weight = regularizer_weight / (class_count);
 	unordered_map<string, double> avg_frames, current_frame, avg_frame_dists;
 
 	avg_frame_dists = videoClassDistances[0];
 	int init_count = frames_count;
-					//min(5, frames_count);
+						//min(5, frames_count);
 	for (int i = 1; i < init_count; ++i) {
 		for (auto& person : videoClassDistances[i])
 			avg_frame_dists[person.first] += person.second;
@@ -359,17 +482,18 @@ int processVideo_ML_dist(vector<unordered_map<string, double>>& videoClassDistan
 	videoClassDistances.push_back(avg_frame_dists);
 	frames_count = 1;
 #endif
+	int models_count = analyzed_models_count;
+	if (models_count == -1)
+		models_count = avg_frame_dists.size();
 
-	if(analyzedModelsCount==-1)
-		analyzedModelsCount= avg_frame_dists.size();
-	
 	set<string> positions;
 	//avg_frames.clear();
 
 	vector<pair<string, double>> distanceToClass(class_count);
 	sortDistances(distanceToClass, avg_frame_dists);
-	for (int i = 0; i < analyzedModelsCount; ++i) {
+	for (int i = 0; i < models_count; ++i) {
 		positions.insert(distanceToClass[i].first);
+		//cout << distanceToClass[i].first << ' ' << distanceToClass[i].second << endl;
 	}
 
 	for (auto& person : videoClassDistances[0])
@@ -379,6 +503,7 @@ int processVideo_ML_dist(vector<unordered_map<string, double>>& videoClassDistan
 		for (string name : positions) {
 			auto& model_row = model_distances[name];
 			double log_prob = 0;
+
 			for (auto& person : videoClassDistances[i]) {
 				if (person.first == name)
 					continue;
@@ -387,6 +512,7 @@ int processVideo_ML_dist(vector<unordered_map<string, double>>& videoClassDistan
 				double tmp = (expected_dist - cur_dist)*(expected_dist - cur_dist) / (4 * expected_dist);
 				log_prob += tmp;
 			}
+			//cout << name << '\t' << videoClassDistances[i][name]<<'\t'<<log_prob << '\t' << log_weight<<'\t'<< (videoClassDistances[i][name] + log_prob*log_weight)<<endl;
 			current_frame[name] = exp(-DISTANCE_WEIGHT*(videoClassDistances[i][name] + log_prob*log_weight));
 			sum += current_frame[name];
 		}
@@ -396,153 +522,404 @@ int processVideo_ML_dist(vector<unordered_map<string, double>>& videoClassDistan
 	}
 
 	sortDistances(distanceToClass, avg_frames);
+
+	/*cout << "after regularization\n";
+	for (int i = 0; i < models_count; ++i) {
+	cout << distanceToClass[i].first << ' ' << distanceToClass[i].second << '\t' << closestFaces[distanceToClass[i].first] << endl;
+	}*/
 	int res = 0;
 	for (; res < distanceToClass.size() && distanceToClass[res].first != correctClassName; ++res)
 		;
 	return res;
 }
-
-
-
-enum class NN_Method { SIMPLE_NN=0, MAP, ML_DIST };
-void test_recognition_method(NN_Method method, vector<FaceImage*>& faceImages, MapOfVideos& videos) {
-	int errorsCount = 0, totalVideos = 0, totalFrames = 0;
-	unordered_map<string, int> class_errors;
-	cout << "start" << flush;
-	auto t1 = chrono::high_resolution_clock::now();
-	for (MapOfVideos::iterator iter = videos.begin(); iter != videos.end(); ++iter) {
-		for (vector<FaceImage*>& video : iter->second) {
-			vector<unordered_map<string, double>> videoClassDistances(video.size());
-			for (int ind = 0; ind < video.size(); ++ind)
-			{
-				unordered_map<string, double>& frameDistances = videoClassDistances[ind];
-				for (int j = 0; j < faceImages.size(); ++j) {
-					float tmpDist = video[ind]->distance(faceImages[j]);
-					bool classNameExists = frameDistances.find(faceImages[j]->personName) != frameDistances.end();
-					if (!classNameExists || (classNameExists && frameDistances[faceImages[j]->personName] > tmpDist))
-						frameDistances[faceImages[j]->personName] = tmpDist;
-				}
-			}
-			int pos = -1;
-			switch (method) {
-			case NN_Method::SIMPLE_NN:
-				pos = processVideo_NN(videoClassDistances, iter->first);
-				break;
-			case NN_Method::MAP:
-				pos = processVideo_NN(videoClassDistances, iter->first,true);
-				break;
-			case NN_Method::ML_DIST:
-				pos = processVideo_ML_dist(videoClassDistances, iter->first);
-				break;
-			}
-			if (pos != 0) {
-				cout << "\rorig=" << std::setw(35) << iter->first << " pos=" << std::setw(4) << pos << flush;
-				//cout << "orig="  << iter->first << " pos=" << pos << " file="<< video[0]->fileName <<'\n';
-				++errorsCount;
-				++class_errors[iter->first];
-			}
-			++totalVideos;
-			totalFrames += video.size();
-			/*if (totalVideos > 100)
-			break;*/
-		}
-	}
-	auto t2 = chrono::high_resolution_clock::now();
-	float total = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-	double recall = 0;
-	for (MapOfVideos::iterator iter = videos.begin(); iter != videos.end(); ++iter) {
-		if (class_errors.find(iter->first) == class_errors.end())
-			recall += 100;
-		else
-			recall += 100 - 100.0*class_errors[iter->first] / iter->second.size();
-	}
-
-	cout << endl<<"method "<< (int)method<<" video error rate=" << (100.0*errorsCount / totalVideos) << " (" << errorsCount << " out of "
-		<< totalVideos << ") recall=" << (recall / videos.size()) << " avg time=" << (total / totalFrames) << "(ms) prev time=" << (total / totalVideos) << "\n";
-
-}
-//#define USE_SVM
+//=================================
 #include <opencv2/core.hpp>
 #include <opencv2/ml.hpp>
 using namespace cv;
 using namespace cv::ml;
-void test_complex_classifier(vector<FaceImage*>& faceImages, MapOfVideos& videos, unordered_map<string, int>& class2no) {
-	cv::Ptr<cv::ml::SVM> svmClassifier;
-	int num_of_cont_features = FEATURES_COUNT;
-	Mat labelsMat(faceImages.size(), 1, CV_32S);
-	Mat trainingDataMat(faceImages.size(), num_of_cont_features, CV_32FC1);
-	for (int i = 0; i<faceImages.size(); ++i) {
-		for (int fi = 0; fi<num_of_cont_features; ++fi) {
-			trainingDataMat.at<float>(i, fi) = faceImages[i]->getFeatures()[fi];
-		}
-		labelsMat.at<int>(i, 0) = class2no[faceImages[i]->personName];
-	}
 
+static int opencv_num_of_features = FEATURES_COUNT;
+class SVMClassifier :public Classifier {
+public:
+	SVMClassifier();
+	void train(MapOfFaces& totalImages, const vector<string>& commonNames);
+	int get_correct_class_pos(const vector<FaceImage*>& video, string correctClassName);
+
+private:
+	cv::Ptr<cv::ml::SVM> opencvClassifier;
+	unordered_map<string, int> class2no;
+};
+
+SVMClassifier::SVMClassifier()
+{
+	set_name("SVM");
 	// Set up SVM's parameters
-	svmClassifier = SVM::create();
-	svmClassifier->setType(SVM::C_SVC);
-	svmClassifier->setKernel(SVM::LINEAR);
-	//svmClassifier->setKernel(SVM::RBF);
-	svmClassifier->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 1000, 1e-8));
-	svmClassifier->setC(10);
+	opencvClassifier = SVM::create();
+	opencvClassifier->setType(SVM::C_SVC);
+	opencvClassifier->setKernel(SVM::LINEAR);
+	//opencvClassifier->setKernel(SVM::RBF);
+	opencvClassifier->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 1000, 1e-8));
+	opencvClassifier->setC(10);
+}
+void SVMClassifier::train(MapOfFaces& faceImages, const vector<string>& commonNames) {
+	class2no.clear();
+	int cur_class_no = 0;
+	for (MapOfFaces::iterator iter = faceImages.begin(); iter != faceImages.end(); ++iter) {
+		class2no[iter->first] = ++cur_class_no;
+	}
 
-	// Train the SVM
-	svmClassifier->train(trainingDataMat, ROW_SAMPLE, labelsMat);
-
-	cout << "start" << flush;
-	int errorsCount = 0, totalVideos = 0, totalFrames = 0;
-	unordered_map<string, int> class_errors;
-	auto t1 = chrono::high_resolution_clock::now();
-	for (MapOfVideos::iterator iter = videos.begin(); iter != videos.end(); ++iter) {
-		for (vector<FaceImage*>& video : iter->second) {
-			vector<unordered_map<string, double>> videoClassDistances(video.size());
-			unordered_map<string, float> classDistances;
-			for (int ind = 0; ind < video.size(); ++ind)
-			{
-				Mat queryMat(1, FEATURES_COUNT, CV_32FC1);
-				for (int fi = 0; fi<FEATURES_COUNT; ++fi) {
-					queryMat.at<float>(0, fi) = video[ind]->getFeatures()[fi];
-				}
-
-				float response = svmClassifier->predict(queryMat);
-				for (auto& class_no : class2no) {
-					if (fabs(class_no.second - response) < 0.1)
-						classDistances[class_no.first] += 0;
-					else
-						classDistances[class_no.first] += 1;
-				}
-			}
-			string bestClass = "";
-			float bestDist = 100000;
-			for (auto& class_dist : classDistances) {
-				if (class_dist.second < bestDist) {
-					bestDist = class_dist.second;
-					bestClass = class_dist.first;
-				}
-			}
-			if (bestClass != iter->first) {
-				cout << "\rorig=" << std::setw(15) << iter->first << " bestClass=" << std::setw(30) << bestClass << flush;
-				++errorsCount;
-				++class_errors[iter->first];
-			}
-			++totalVideos;
-			totalFrames += video.size();
+	int db_size = 0;
+	for (MapOfFaces::iterator iter = faceImages.begin(); iter != faceImages.end(); ++iter) {
+		for (FaceImage* face : iter->second) {
+			++db_size;
 		}
 	}
-	auto t2 = chrono::high_resolution_clock::now();
-	float total = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-	double recall = 0;
-	for (MapOfVideos::iterator iter = videos.begin(); iter != videos.end(); ++iter) {
-		if (class_errors.find(iter->first) == class_errors.end())
-			recall += 100;
-		else
-			recall += 100 - 100.0*class_errors[iter->first] / iter->second.size();
-	}
+	Mat labelsMat(db_size, 1, CV_32S);
+	Mat trainingDataMat(db_size, opencv_num_of_features, CV_32FC1);
 
-	cout << endl<<"SVM video error rate=" << (100.0*errorsCount / totalVideos) << " (" << errorsCount << " out of "
-		<< totalVideos << ") recall=" << (recall / videos.size()) << " avg time=" << (total / totalFrames) << "(ms) prev time=" << (total / totalVideos) << "\n";
+	int ind = 0;
+	for (MapOfFaces::iterator iter = faceImages.begin(); iter != faceImages.end(); ++iter) {
+		for (FaceImage* face : iter->second) {
+			for (int fi = 0; fi < opencv_num_of_features; ++fi) {
+				trainingDataMat.at<float>(ind, fi) = face->getFeatures()[fi];
+			}
+			labelsMat.at<int>(ind, 0) = class2no[face->personName];
+			++ind;
+		}
+	}
+	opencvClassifier->train(trainingDataMat, ROW_SAMPLE, labelsMat);
+}
+int SVMClassifier::get_correct_class_pos(const vector<FaceImage*>& video, string correctClassName)
+{
+	vector<unordered_map<string, double>> videoClassDistances(video.size());
+	unordered_map<string, float> classDistances;
+	for (int ind = 0; ind < video.size(); ++ind)
+	{
+		Mat queryMat(1, FEATURES_COUNT, CV_32FC1);
+		for (int fi = 0; fi < FEATURES_COUNT; ++fi) {
+			queryMat.at<float>(0, fi) = video[ind]->getFeatures()[fi];
+		}
+
+		float response = opencvClassifier->predict(queryMat);
+		for (auto& class_no : class2no) {
+			if (fabs(class_no.second - response) < 0.1)
+				classDistances[class_no.first] += 0;
+			else
+				classDistances[class_no.first] += 1;
+		}
+	}
+	/*string bestClass = "";
+	float bestDist = 100000;
+	for (auto& class_dist : classDistances) {
+		if (class_dist.second < bestDist) {
+			bestDist = class_dist.second;
+			bestClass = class_dist.first;
+		}
+	}*/
+	vector<pair<string, float>> distanceToClass(class2no.size());
+	sortDistances(distanceToClass, classDistances);
+	
+	int res = 0;
+	for (; res < distanceToClass.size() && distanceToClass[res].first != correctClassName; ++res)
+		;
+	return res;
+}
+//=================================
+#define COMPUTE_PCA
+int max_components = 256;
+void train_pca(MapOfFaces& totalImages, PCA& pca) {
+#ifdef COMPUTE_PCA
+	int total_images_count = 0;
+	for (auto& person : totalImages) {
+		total_images_count += person.second.size();
+	}
+	Mat mat_features(total_images_count, FEATURES_COUNT, CV_32F);
+	int ind = 0;
+	for (auto& person : totalImages) {
+		for (const FaceImage* face : person.second) {
+			for (int j = 0; j < FEATURES_COUNT; ++j) {
+				mat_features.at<float>(ind, j) =
+					face->getFeatures()[j];
+			}
+			++ind;
+		}
+	}
+	cout << "before pca train " << mat_features.rows << ' ' << mat_features.cols << ' ' << mat_features.type() << "\n";
+	pca(mat_features, Mat(), CV_PCA_DATA_AS_ROW, max_components);
+	cout << " end training pca\n";
+#endif
+}
+class SequentialClassifier :public BruteForceClassifier {
+public:
+	SequentialClassifier(PCA& pca, FusionMethod fusion = FusionMethod::MEAN_DIST, double th=0.7, int feat_count = 32, int dist_weight = DISTANCE_WEIGHT);
+	void train(MapOfFaces& totalImages, const vector<string>& commonNames);
+	virtual int get_correct_class_pos(const vector<FaceImage*>& video, string correctClassName);
+
+	virtual int processVideo(vector<unordered_map<string, double>>& videoClassDistances, string correctClassName);
+private:
+	double threshold;
+	int reduced_features_count;
+
+	cv::PCA& pca;
+	std::vector<FaceImage*> new_database;
+	std::vector<int> class_indices;
+	int class_count;
+	
+	void recognize_frame(const float* test_features, vector<double>& distances, vector<int>& end_feature_indices, vector<int>& classes_to_check);
+};
+SequentialClassifier::SequentialClassifier(PCA& p, FusionMethod fusion, double th, int feat_count, int dist_weight) : BruteForceClassifier(fusion, dist_weight), pca(p), threshold(1.0 / th), reduced_features_count(feat_count)
+{
+	ostringstream os;
+	os << "seq "<<int(fusion)<<" threshold=" << threshold << " feat_count=" << reduced_features_count<<" dw="<<distance_weight;
+	set_name(os.str()); 
+}
+void SequentialClassifier::train(MapOfFaces& totalImages, const vector<string>& commonNames) {
+	int total_images_count = 0;
+	for (auto& person : totalImages) {
+		total_images_count += person.second.size();
+	}
+#ifdef COMPUTE_PCA
+	Mat mat_features(total_images_count, FEATURES_COUNT, CV_32F);
+	int ind = 0;
+	for (auto& person : totalImages) {
+		for (const FaceImage* face : person.second) {
+			for (int j = 0; j < FEATURES_COUNT; ++j) {
+				mat_features.at<float>(ind, j) =
+					face->getFeatures()[j];
+			}
+			++ind;
+		}
+	}
+	/*cout << "before pca train "<<mat_features.rows<<' '<<mat_features.cols<<' '<<mat_features.type()<<"\n";
+	pca(mat_features, Mat(), CV_PCA_DATA_AS_ROW, 0);
+	*/
+	Mat mat_projection_result = pca.project(mat_features);
+	//cout << "after pca train " << mat_projection_result.rows << ' ' << mat_projection_result.cols << ' ' << mat_projection_result.type() << "\n";
+#endif
+	int images_no = 0;
+	class_count = 0;
+	new_database.resize(total_images_count);
+	class_indices.resize(total_images_count);
+	for (auto& person : totalImages) {
+		for (FaceImage* face : person.second) {
+#ifdef COMPUTE_PCA
+			std::vector<float> features(FEATURES_COUNT);
+			for (int j = 0; j < mat_projection_result.cols; ++j) {
+				//db_features[i1*featuresCount + j] =
+				features[j] = mat_projection_result.at<float>(images_no, j);
+			}
+#else
+			std::vector<float>& features = face->getFeatureVector();
+#endif
+			new_database[images_no]=new FaceImage(face->fileName,face->personName,features,false);
+			class_indices[images_no] = class_count;
+			
+			++images_no;
+		}
+		++class_count;
+	}
+}
+
+inline float get_distance(const float* lhs, const float* rhs, int start, int end) {
+	float d = 0;
+	for (int fi = start; fi < end; ++fi) {
+#if DISTANCE==EUC
+		d += (lhs[fi] - rhs[fi])*(lhs[fi] - rhs[fi]);
+#endif
+	}
+	
+	return d;
+}
+void SequentialClassifier::recognize_frame(const float* test_features, vector<double>& distances, vector<int>& end_feature_indices, vector<int>& classes_to_check) {
+	distances.resize(new_database.size());
+	end_feature_indices.resize(new_database.size());
+	vector<double> class_min_distances(class_count);
+	int last_feature =
+		//FEATURES_COUNT;
+		256;
+	//max_components;
+	
+	int cur_features = 0;
+	for (; cur_features<last_feature; cur_features += reduced_features_count) {
+		double bestDist = 100000;
+		fill(class_min_distances.begin(), class_min_distances.end(), numeric_limits<float>::max());
+		for (int j = 0; j < new_database.size();++j) {
+			if (!classes_to_check[class_indices[j]])
+				continue;
+			distances[j] += get_distance(test_features, new_database[j]->getFeatures(), cur_features, cur_features+reduced_features_count);
+			end_feature_indices[j] += reduced_features_count;
+
+			if (distances[j]<class_min_distances[class_indices[j]])
+				class_min_distances[class_indices[j]] = distances[j];
+			if (distances[j] < bestDist) {
+				bestDist = distances[j];
+			}
+		}
+
+		int num_of_variants = 0;
+		double dist_threshold = bestDist*threshold;
+
+		for (int c = 0; c<classes_to_check.size(); ++c) {
+			if (classes_to_check[c]) {
+				if (class_min_distances[c]>dist_threshold)
+					classes_to_check[c] = 0;
+				else
+					++num_of_variants;
+			}
+		}
+		if (num_of_variants == 1)
+			break;
+	}
 
 }
+int SequentialClassifier::get_correct_class_pos(const vector<FaceImage*>& video, string correctClassName)
+{
+	int frames_count = video.size();
+	//pca transform
+	vector<vector<float>> test_features(frames_count);
+#ifdef COMPUTE_PCA
+	Mat queryMat(frames_count, FEATURES_COUNT, CV_32FC1);
+	for (int ind = 0; ind < frames_count; ++ind)
+	{
+		for (int fi = 0; fi < FEATURES_COUNT; ++fi) {
+			queryMat.at<float>(ind, fi) = video[ind]->getFeatures()[fi];
+		}
+	}
+	Mat pcaMat = pca.project(queryMat);
+#endif
+	for (int ind = 0; ind < frames_count; ++ind)
+	{
+		test_features[ind].resize(max_components);
+		for (int fi = 0; fi < max_components; ++fi) {
+#ifdef COMPUTE_PCA
+			test_features[ind][fi] = pcaMat.at<float>(ind, fi);
+#else
+			test_features[ind][fi] = video[ind]->getFeatures()[fi];
+#endif
+		}
+	}
+
+	vector<unordered_map<string, double>> videoClassDistances(video.size());
+
+	if (reduced_features_count > 0) {
+		vector<vector<double>> distances(frames_count);
+		vector<vector<int>> end_feature_indices(frames_count);
+		vector<int> classes_to_check(class_count),total_classes_to_check(class_count);
+
+		for (int ind = 0; ind < frames_count; ++ind)
+		{
+			fill(classes_to_check.begin(), classes_to_check.end(), 1);
+			recognize_frame(&test_features[ind][0], distances[ind], end_feature_indices[ind], classes_to_check);
+			for (int c = 0; c < class_count; ++c)
+				total_classes_to_check[c] += classes_to_check[c];
+		}
+		for (int ind = 0; ind < frames_count; ++ind)
+		{
+			unordered_map<string, double>& frameDistances = videoClassDistances[ind];
+			for (int j = 0; j < new_database.size(); ++j) {
+				if (!total_classes_to_check[class_indices[j]])
+					continue;
+
+				distances[ind][j] += get_distance(&test_features[ind][0], new_database[j]->getFeatures(),
+					end_feature_indices[ind][j], max_components);
+				distances[ind][j] /= max_components;
+
+				string class_name = new_database[j]->personName;
+				bool classNameExists = frameDistances.find(class_name) != frameDistances.end();
+				if (!classNameExists || (classNameExists && frameDistances[class_name] > distances[ind][j])) {
+					frameDistances[class_name] = distances[ind][j];
+				}
+			}
+		}
+	}
+	else{
+		for (int ind = 0; ind < frames_count; ++ind)
+		{
+			unordered_map<string, double>& frameDistances = videoClassDistances[ind];
+			for (int j = 0; j < new_database.size(); ++j) {
+
+				float dist = get_distance(&test_features[ind][0], new_database[j]->getFeatures(),
+					0, -reduced_features_count)/(-reduced_features_count);
+
+				string class_name = new_database[j]->personName;
+				bool classNameExists = frameDistances.find(class_name) != frameDistances.end();
+				if (!classNameExists || (classNameExists && frameDistances[class_name] > dist)) {
+					frameDistances[class_name] = dist;
+				}
+			}
+		}
+	}
+	return processVideo(videoClassDistances,correctClassName);
+}
+
+int SequentialClassifier::processVideo(vector<unordered_map<string, double>>& videoClassDistances, string correctClassName) {
+	return BruteForceClassifier::processVideo(videoClassDistances,correctClassName);
+}
+//=================================
+
+
+
+
+#define TRAIN_RATE 0.8
+#ifdef TRAIN_RATE
+#define TEST_COUNT 3
+#else
+#define TEST_COUNT 1
+#endif
+
+void test_recognition_method(Classifier* classifier, MapOfFaces& totalImages, MapOfVideos& videos, vector<string>& commonNames) {
+#ifdef TRAIN_RATE
+	srand(17);
+	MapOfFaces faceImages, testImages;
+#else
+	MapOfFaces& faceImages = totalImages;
+#endif
+	float total_accuracy = 0, total_time=0;
+	for (int t = 0; t < TEST_COUNT; ++t) {
+#ifdef TRAIN_RATE
+		getTrainingAndTestImages(totalImages, faceImages, testImages, true, TRAIN_RATE);
+#endif
+		classifier->train(faceImages, commonNames);
+
+		int errorsCount = 0, totalVideos = 0, totalFrames = 0;
+		unordered_map<string, int> class_errors;
+		cout << "start" << flush;
+		auto t1 = chrono::high_resolution_clock::now();
+		for (MapOfVideos::iterator iter = videos.begin(); iter != videos.end(); ++iter) {
+			for (vector<FaceImage*>& video : iter->second) {
+				int pos = classifier->get_correct_class_pos(video, iter->first);
+				if (pos != 0) {
+					cout << "\rorig=" << std::setw(35) << iter->first << " pos=" << std::setw(4) << pos << flush;
+					//cout << "orig="  << iter->first << " pos=" << pos << " file="<< video[0]->fileName <<'\n';
+					++errorsCount;
+					++class_errors[iter->first];
+				}
+				++totalVideos;
+				totalFrames += video.size();
+			}
+			/*if (totalVideos > 10)
+				break;*/
+		}
+		auto t2 = chrono::high_resolution_clock::now();
+		float total = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
+		double recall = 0;
+		for (MapOfVideos::iterator iter = videos.begin(); iter != videos.end(); ++iter) {
+			if (class_errors.find(iter->first) == class_errors.end())
+				recall += 100;
+			else
+				recall += 100 - 100.0*class_errors[iter->first] / iter->second.size();
+		}
+
+		cout << endl << "method " << classifier->get_name() << " video error rate=" << (100.0*errorsCount / totalVideos) << " (" << errorsCount << " out of "
+			<< totalVideos << ") recall=" << (recall / videos.size()) << " avg time=" << (total / totalFrames) << "(ms) prev time=" << (total / totalVideos) << "\n";
+		total_accuracy += 100.0*(totalVideos - errorsCount) / totalVideos;
+		total_time += total / totalFrames;
+	}
+	cout << "method " << classifier->get_name()<<" average accuracy=" << total_accuracy/TEST_COUNT <<
+		" total time (ms)="<< total_time/TEST_COUNT << "\n\n";
+}
+
+
 void testVideoRecognition() {
 	MapOfFaces totalImages;
 #if 1
@@ -587,32 +964,89 @@ void testVideoRecognition() {
 		totalImages.erase(needToRemove);
 		videos.erase(needToRemove);
 	}
+	
 
+
+#if 0
 	compute_model_distances(totalImages, commonNames);
-
-	vector<FaceImage*> faceImages;
-	unordered_map<string, int> class2no;
-	int cur_class_no = 0;
+	/*vector<FaceImage*> faceImages;
 	for (MapOfFaces::iterator iter = totalImages.begin(); iter != totalImages.end(); ++iter) {
-		class2no[iter->first] = ++cur_class_no;
 		for (FaceImage* face : iter->second)
 			faceImages.push_back(face);
+	}*/
+	string className = "942";
+	vector<FaceImage*> video (1);
+	vector<FaceImage*>& orig_video = videos[className][12];
+	video[0]=orig_video[0];
+	//for (int k = 0; k < orig_video.size(); ++k)
+	{
+		//video[0] = orig_video[k];
+		/*cout << k << endl;
+		video.clear();
+		video.push_back(orig_video[k]);*/
+		
+		//video.push_back(orig_video[0]); video.push_back(orig_video[10]); video.push_back(orig_video.back());
+		//video.erase(video.begin() + k, video.end());
+		//video.erase(video.begin(),video.begin() + video.size() -1);
+		//video = orig_video;
+		int pos = recognize(NN_Method::SIMPLE_NN, totalImages, video, className);
+		cout << "nn pos=" << pos << endl;
+		/*pos = recognize(NN_Method::MAP, totalImages, video, className);
+		cout << "nn pos=" << pos << endl;*/
+		analyzed_models_count = 16;
+		pos = recognize(NN_Method::ML_DIST, totalImages, video, className);
+		cout << "proposed pos=" << pos << endl;
 	}
-	test_recognition_method(NN_Method::SIMPLE_NN, faceImages, videos);
-	test_recognition_method(NN_Method::MAP, faceImages, videos);
-	test_complex_classifier(faceImages, videos, class2no);
+	return;
+#endif
+
+	vector<Classifier*> classifiers;
+
+	//classifiers.push_back(new BruteForceClassifier(FusionMethod::MEAN_DIST));
+#ifndef AGGREGATE_VIDEOS
+	//classifiers.push_back(new BruteForceClassifier(FusionMethod::MAP)); 
+	//classifiers.push_back(new BruteForceClassifier(FusionMethod::MAX_POSTERIOR));
+#endif
+	//classifiers.push_back(new SVMClassifier());
+#if 0
+	//test_complex_classifier(totalImages, videos, class2no);
 	vector<int> regs({ 8 });// 8, 80, 100, 120, 64, 40, 28, 4, 16});
 	for (int reg : regs) {
-	//for (int reg = 1; reg <= 8; reg += 1) {
-	//for (int reg = 8; reg >= 2; reg -= 2) {
-		regularizer_weight = reg;
-		cout << "regularizer_weight=" << regularizer_weight << endl;
+	//for (double reg = 7; reg <= 9; reg += 0.2) {
 		//for (int M = 1; M <= 256; M *= 2) 
+		int M = 16;
 		{
-			analyzedModelsCount = 16;// M;
-			cout << "analyzedModelsCount=" << analyzedModelsCount << endl;
-			test_recognition_method(NN_Method::ML_DIST, faceImages, videos);
+			classifiers.push_back(new MLDistClassifier(reg, M));
 		}
+	}
+#endif
+#if 1
+	PCA pca;
+	train_pca(totalImages, pca);
+	//for (double th = 0.5; th <= 0.9; th += 0.1)
+	double th = 0.7;
+	{
+		//brute force of first 32/256 principal components
+		//classifiers.push_back(new SequentialClassifier(pca, FusionMethod::MEAN_DIST, th, -32));
+		//classifiers.push_back(new SequentialClassifier(pca, FusionMethod::MEAN_DIST, th, -256));
+
+		classifiers.push_back(new SequentialClassifier(pca, FusionMethod::MEAN_DIST, th, 32));
+
+#ifndef AGGREGATE_VIDEOS
+		//for (int dist_weight = 300; dist_weight <= 300000; dist_weight *= 10) 
+		int dist_weight = 3000;// 30000;
+		{
+			classifiers.push_back(new SequentialClassifier(pca, FusionMethod::MAP, th, 32, dist_weight));
+			classifiers.push_back(new SequentialClassifier(pca, FusionMethod::MAX_POSTERIOR, th, 32, dist_weight));
+		}
+#endif
+	}
+#endif
+	for (Classifier* classifier : classifiers) {
+		test_recognition_method(classifier, totalImages, videos, commonNames);
+	}
+	for (Classifier* classifier : classifiers) {
+		delete classifier;
 	}
 }
 
@@ -621,7 +1055,7 @@ void testRecognitionOfMultipleImages() {
 	MapOfFaces totalImages, faceImages, testImages;
 	loadFaces(totalImages);
 	
-	distance_map dist_map;
+	MLDistClassifier::distance_map dist_map;
 	for (auto& person1 : totalImages) {
 		for (auto& face1 : person1.second) {
 			for (auto& person2 : totalImages) {
@@ -642,10 +1076,12 @@ void testRecognitionOfMultipleImages() {
 
 	const int TESTS = 10;
 	double totalTestsErrorRate = 0, errorRateVar = 0;
+	BruteForceClassifier* classifier = new MLDistClassifier(8,16,&dist_map);
 	for (int testCount = 0; testCount < TESTS; ++testCount) {
 		int errorsCount = 0;
 		getTrainingAndTestImages(totalImages, faceImages, testImages);
-		compute_model_distances(faceImages, class_names,&dist_map);
+		
+		classifier->train(faceImages, class_names);
 
 		float bestDist, tmpDist;
 		string bestClass;
@@ -671,7 +1107,7 @@ void testRecognitionOfMultipleImages() {
 						classDistances.insert(make_pair(dbPersonImages.first, bestDist));
 					}
 				}
-				int res = processVideo_ML_dist(videoClassDistances, testPersonImages.first);
+				int res = classifier->processVideo(videoClassDistances, testPersonImages.first);
 				if (res != 0)
 					++errorsCount;
 			}

@@ -22,7 +22,7 @@ void removeSingleImages(MapOfFaces& dbImages) {
 	cout << "total size=" << dbImages.size() << " removed=" << listToRemove.size() << endl;
 }
 
-void getTrainingAndTestImages(const MapOfFaces& totalImages, std::vector<FaceImage*>& faceImages, std::vector<FaceImage*>& testImages, bool randomize)
+void getTrainingAndTestImages(const MapOfFaces& totalImages, std::vector<FaceImage*>& faceImages, std::vector<FaceImage*>& testImages, bool randomize, float fraction)
 {
 	const int INDICES_COUNT = 400;
 	int indices[INDICES_COUNT];
@@ -37,7 +37,7 @@ void getTrainingAndTestImages(const MapOfFaces& totalImages, std::vector<FaceIma
 	for (MapOfFaces::const_iterator iter = totalImages.begin(); iter != totalImages.end(); ++iter) {
 		int currentFaceCount = iter->second.size();
 		//cout << currentFaceCount << endl;
-		float size_f = currentFaceCount*FRACTION;
+		float size_f = currentFaceCount*fraction;
 		int db_size = (int)size_f;
 		if (rand() & 1)
 			db_size = (int)ceil(size_f);
@@ -61,7 +61,7 @@ void getTrainingAndTestImages(const MapOfFaces& totalImages, std::vector<FaceIma
 		}
 	}
 }
-void getTrainingAndTestImages(const MapOfFaces& totalImages, MapOfFaces& faceImages, MapOfFaces& testImages, bool randomize){
+void getTrainingAndTestImages(const MapOfFaces& totalImages, MapOfFaces& faceImages, MapOfFaces& testImages, bool randomize, float fraction){
 	const int INDICES_COUNT = 400;
 	int indices[INDICES_COUNT];
 	for (int i = 0; i<INDICES_COUNT; ++i)
@@ -76,7 +76,7 @@ void getTrainingAndTestImages(const MapOfFaces& totalImages, MapOfFaces& faceIma
 		string class_name = iter->first;
 		int currentFaceCount = iter->second.size();
 		//cout << currentFaceCount << endl;
-		float size_f = currentFaceCount*FRACTION;
+		float size_f = currentFaceCount*fraction;
 		int db_size = (int)size_f;
 		if (rand() & 1)
 			db_size = (int)ceil(size_f);
