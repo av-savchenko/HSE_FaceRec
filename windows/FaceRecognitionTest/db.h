@@ -95,14 +95,17 @@ const std::string FEATURES_FILE_NAME = IMAGE_DIR+"jaffe\\dnn_features.txt";
 const std::string BASE_DIR = IMAGE_DIR+"lfw_ytf\\";
 //const std::string DB = IMAGE_DIR+"lfw-deepfunneled\\db";
 //const std::string TEST = IMAGE_DIR+"lfw-deepfunneled\\test";
-const std::string DB = BASE_DIR+"lfw_cropped";
+const std::string DB = BASE_DIR + 
+//"lfw_faces";
+"lfw_cropped";
 const std::string TEST = "";
-const float FRACTION = 0.5;
-const std::string FEATURES_FILE_NAME = BASE_DIR +"lfw_"+
+const float FRACTION = 0.0;
+const std::string FEATURES_FILE_NAME = BASE_DIR +"lfw_"+"faces_"+
 #ifdef USE_RGB_DNN
 //"vgg_features.txt";
 "vgg2_features.txt";
 //"res101_features.txt";
+//"ydwen_features.txt"; 
 #else
 "dnn_features.txt";
 #endif
@@ -119,22 +122,23 @@ IMAGE_DIR+"pubfig83\\dnn_vgg_features.txt";
 IMAGE_DIR+"pubfig83\\dnn_features.txt";
 #endif
 #elif DB_USED == USE_IJBA
+//#define USE_MEDIA_ID
 const std::string BASE_DIR = IMAGE_DIR +
-//"ijba\\1N_sets\\split2\\";
-"ijba\\1N_images\\";
+"ijba\\1N_sets\\split2\\new\\";
+//"ijba\\1N_images\\";
 
-const std::string DB = BASE_DIR +"gallery";
+const std::string DB = BASE_DIR +"gallery_equal";
 const std::string TEST = "";
 const float FRACTION = 0.5;
-const std::string FEATURES_FILE_NAME = BASE_DIR +
+const std::string FEATURES_FILE_NAME = BASE_DIR +"gallery_"+"equal_"+
 #ifdef USE_RGB_DNN
-//"gallery_dnn_vgg_features.txt";
-"gallery_dnn_vgg2_features.txt";
-//"gallery_dnn_vgg2_features_flipped.txt";
-//"gallery_dnn_res101_features.txt";
-//"gallery_dnn_ydwen_features.txt"; 
+//"dnn_vgg_features.txt";
+"dnn_vgg2_features.txt";
+//"dnn_vgg2_features_flipped.txt";
+//"dnn_res101_features.txt";
+//"dnn_ydwen_features.txt"; 
 #else
-"gallery_dnn_lcnn_features.txt";
+"dnn_lcnn_features.txt";
 #endif
 #elif DB_USED == USE_TEST_DB
 const std::string DB = "";

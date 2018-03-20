@@ -161,6 +161,7 @@ FaceImage::FaceImage(const char* imageFileName, const std::string& pName, int pW
 #else
 	width = height = 128;
 #endif
+
 	resize(img, img, Size(width,height));
 
 	init(img, width, height, rndImageRange, img_transform);
@@ -216,6 +217,7 @@ fileName(fn),personName(pn),featureVector(FEATURES_COUNT)
 		sum = sqrt(sum);
 #endif
 	}
+	//std::cout << "sum=" << sum << std::endl;
 	for (int i = 0; i < FEATURES_COUNT; ++i)
 		featureVector[i] = features[i] / sum;
 }
@@ -1181,7 +1183,7 @@ void FaceImage::initHistos(int* pixels)
 
 #if 1
 	int hog_feat_size = 0;
-	float* hog_features = extractHOG(hog_feat_size);
+	float* hog_features =  extractHOG(hog_feat_size);
 	//std::cout << hog_feat_size << '\n';
 #else
 	int hog_feat_size = COLORS_COUNT*POINTS_IN_W*POINTS_IN_H*HISTO_SIZE;

@@ -27,10 +27,13 @@ const std::string VIDEO_DIR = BASE_DIR +
 "YTF_cropped_10th";
 #else
 //"gallery_media";
-"probe";
+"probe_equal";
 #endif
 
-const std::string VIDEO_FEATURES_FILE = VIDEO_DIR +
+const std::string VIDEO_FEATURES_FILE = VIDEO_DIR + 
+#if DB_USED!=USE_LFW
+"_equal"+
+#endif
 #ifdef USE_RGB_DNN
 //"_vgg_dnn_features.txt";
 "_vgg2_dnn_features.txt";
@@ -40,7 +43,7 @@ const std::string VIDEO_FEATURES_FILE = VIDEO_DIR +
 "_lcnn_dnn_features.txt";
 #endif
 
-#if 1 //vgg L2, vgg2
+#if 0 //vgg L2, vgg2
 const double DISTANCE_WEIGHT = 1000;
 #elif 0 //lcnn, caffe center face, resnet-101
 const double DISTANCE_WEIGHT = 100;
@@ -168,12 +171,16 @@ void loadVideos(MapOfVideos& dbVideos, std::string video_file= VIDEO_FEATURES_FI
 		dbVideos.insert(std::make_pair(personName, vector<vector<FaceImage*>>()));
 		vector<vector<FaceImage*>>& person_videos = dbVideos[personName];
 		person_videos.resize(videos_count);
-
 		for (int i = 0; i < videos_count; ++i) {
 			int frames_count;
 			ifs >> frames_count;
 			if (!getline(ifs, fileName))
 				break;
+#ifdef USE_MEDIA_ID
+			vector<float> avg_features(FEATURES_COUNT);
+			string prev_media_id = "";
+			int num_of_frames_in_media = 0;
+#endif
 #ifdef AGGREGATE_VIDEOS
 			vector<float> features(FEATURES_COUNT);
 
@@ -183,19 +190,19 @@ void loadVideos(MapOfVideos& dbVideos, std::string video_file= VIDEO_FEATURES_FI
 				if (!getline(ifs, feat_str))
 					break;
 				istringstream iss(feat_str);
-				for (int i = 0; i < FEATURES_COUNT; ++i) {
+				for (int ind = 0; ind < FEATURES_COUNT; ++ind) {
 					float f;
 					iss >> f;
 					features[i] += f;
 				}
 
 			}
-			for (int i = 0; i < FEATURES_COUNT; ++i) {
-				features[i] /= frames_count;
+			for (int ind = 0; ind < FEATURES_COUNT; ++ind) {
+				features[ind] /= frames_count;
 			}
 			person_videos[i].push_back(new FaceImage(fileName, personName, features));
 			++total_images;
-			
+
 #else
 			for (int j = 0; j < frames_count; ++j) {
 				if (!getline(ifs, fileName))
@@ -204,15 +211,61 @@ void loadVideos(MapOfVideos& dbVideos, std::string video_file= VIDEO_FEATURES_FI
 					break;
 				istringstream iss(feat_str);
 				vector<float> features(FEATURES_COUNT);
-				for (int i = 0; i < FEATURES_COUNT; ++i) {
-					iss >> features[i];
+				for (int ind = 0; ind < FEATURES_COUNT; ++ind) {
+					iss >> features[ind];
 				}
+#ifdef USE_MEDIA_ID
+				size_t slash_ind = fileName.rfind("\\");
+				size_t dot_ind = fileName.rfind(".");
+				size_t underscore_ind = fileName.rfind("_");
+				string media_id = "";
+				if (slash_ind != string::npos) {
+					size_t end_ind = dot_ind;
+					if (underscore_ind != string::npos && underscore_ind > slash_ind)
+						end_ind = underscore_ind;
+					media_id = fileName.substr(slash_ind + 1, end_ind - slash_ind - 1);
+				}
+				//cout << fileName << ' ' << media_id << '\n';
+				//cout << i<<' '<<fileName << ' ' << media_id << ' ' << prev_media_id << ' ' << num_of_frames_in_media << '\n';
+				if (prev_media_id != media_id) {
+					if (num_of_frames_in_media > 0) {
+						for (int ind = 0; ind < FEATURES_COUNT; ++ind) {
+							avg_features[ind] /= num_of_frames_in_media;
+						}
+						person_videos[i].push_back(new FaceImage(fileName, personName, avg_features));
+						for (int ind = 0; ind < FEATURES_COUNT; ++ind) {
+							avg_features[ind] = 0;
+						}
+						num_of_frames_in_media = 0;
+						++total_images;
+					}
+					prev_media_id = media_id;
+				}
+				++num_of_frames_in_media;
+				for (int ind = 0; ind < FEATURES_COUNT; ++ind) {
+					avg_features[ind] += features[ind];
+				}
+#else
 				person_videos[i].push_back(new FaceImage(fileName, personName, features));
 				++total_images;
-
+#endif
+			}
+#ifdef USE_MEDIA_ID
+			string media_id = prev_media_id;
+			//cout << "end "<<fileName << ' ' << media_id << ' ' << prev_media_id << ' ' << num_of_frames_in_media << '\n';
+			if (num_of_frames_in_media > 0) {
+				for (int ind = 0; ind < FEATURES_COUNT; ++ind) {
+					avg_features[ind] /= num_of_frames_in_media;
+				}
+				person_videos[i].push_back(new FaceImage(fileName, personName, avg_features));
+				++total_images;
 			}
 #endif
+#endif
 		}
+		/*for (int i = 0; i < videos_count; ++i){
+			cout << i << ' ' << person_videos[i].size() << '\n';
+		}*/
 		total_videos += videos_count;
 		dbVideos.insert(std::make_pair(personName, person_videos));
 	}
@@ -229,7 +282,8 @@ static unordered_map<string, string> closestFaces;
 
 class Classifier {
 public:
-	virtual ~Classifier() {}
+	Classifier():pDbImages(0) {}
+	virtual ~Classifier(){}
 
 	virtual void train(MapOfFaces& pDb, const vector<string>& commonNames) { pDbImages = &pDb; }
 	virtual int get_correct_class_pos(const vector<FaceImage*>& video, string correctClassName) = 0;
@@ -380,8 +434,10 @@ int BruteForceClassifier::processVideo(vector<unordered_map<string, double>>& vi
 //=================================
 class MLDistClassifier :public BruteForceClassifier {
 public:
-	typedef unordered_map<FaceImage*, unordered_map<FaceImage*, float>> distance_map;
-	MLDistClassifier(double reg_weight = 8, int model_count = -1, distance_map* dm = 0);
+	//typedef unordered_map<FaceImage*, unordered_map<FaceImage*, float>> distance_map;
+	typedef vector<vector<float>> distance_map;
+	typedef unordered_map<FaceImage*, int> image_map;
+	MLDistClassifier(double reg_weight = 8, int model_count = -1, distance_map* dm = 0, image_map* im=0);
 	virtual void train(MapOfFaces& pDb, const vector<string>& commonNames);
 
 	virtual int processVideo(vector<unordered_map<string, double>>& videoClassDistances, string correctClassName);
@@ -393,9 +449,10 @@ private:
 										//-1 = avg_frame_dists.size();
 
 	distance_map* dist_map;
-	unordered_map<string, unordered_map<string, float> > model_distances, model_probabs;
+	image_map* img_map;
+	unordered_map<string, unordered_map<string, float> > model_distances;// , model_probabs;
 };
-MLDistClassifier::MLDistClassifier(double reg_weight, int model_count, distance_map* dm) : regularizer_weight(reg_weight), analyzed_models_count(model_count), dist_map(dm) {
+MLDistClassifier::MLDistClassifier(double reg_weight, int model_count, distance_map* dm, image_map* im) : regularizer_weight(reg_weight), analyzed_models_count(model_count), dist_map(dm), img_map(im) {
 	ostringstream os;
 	os << "ML distances reg=" << regularizer_weight<<" analyzed_models_count="<< analyzed_models_count;
 	set_name(os.str()); 
@@ -405,6 +462,7 @@ void MLDistClassifier::train(MapOfFaces& totalImages, const vector<string>& comm
 { 
 	BruteForceClassifier::train(totalImages, commonNames);
 	//compute model distances
+	model_distances.clear();
 	double avg_same_dist = 0;
 	int same_count = 0;
 	for (string name : commonNames) {
@@ -415,8 +473,10 @@ void MLDistClassifier::train(MapOfFaces& totalImages, const vector<string>& comm
 				int size = totalImages[name].size();
 				if (size > 1) {
 					for (FaceImage* face : totalImages[name]) {
+						int face_ind = (img_map != 0)?(*img_map)[face]:0;
 						for (FaceImage* otherFace : totalImages[name]) {
-							float dist = (dist_map != 0) ? (*dist_map)[otherFace][face] : otherFace->distance(face);
+							int other_ind = (img_map != 0) ? (*img_map)[otherFace] : 0;
+							float dist = (dist_map != 0) ? (*dist_map)[other_ind][face_ind] : otherFace->distance(face);
 							classDistance += dist;
 						}
 					}
@@ -427,14 +487,16 @@ void MLDistClassifier::train(MapOfFaces& totalImages, const vector<string>& comm
 			}
 			else {
 				for (FaceImage* face : totalImages[name]) {
+					int face_ind = (img_map != 0) ? (*img_map)[face] : 0;
 					for (FaceImage* otherFace : totalImages[otherName]) {
-						float dist = otherFace->distance(face);
+						int other_ind = (img_map != 0) ? (*img_map)[otherFace] : 0;
+						float dist = (dist_map != 0) ? (*dist_map)[other_ind][face_ind] : otherFace->distance(face);
 						if (dist < classDistance)
 							classDistance = dist;
 					}
 				}
 			}
-			model_distances[name].insert(make_pair(otherName, classDistance));
+			model_distances[name][otherName]= classDistance;
 		}
 	}
 	if (same_count > 0)
@@ -445,7 +507,7 @@ void MLDistClassifier::train(MapOfFaces& totalImages, const vector<string>& comm
 		double max_val = 0, sum = 0;
 		if (model_distances[name][name] == 0)
 			model_distances[name][name] = avg_same_dist;
-		for (string otherName : commonNames) {
+		/*for (string otherName : commonNames) {
 			double prob = exp(-DISTANCE_WEIGHT* model_distances[name][otherName]);
 			model_probabs[name][otherName] = prob;
 			sum += prob;
@@ -457,7 +519,7 @@ void MLDistClassifier::train(MapOfFaces& totalImages, const vector<string>& comm
 			for (string otherName : commonNames) {
 				model_probabs[name][otherName] /= max_val;
 			}
-		}
+		}*/
 	}
 }
 
@@ -491,11 +553,18 @@ int MLDistClassifier::processVideo(vector<unordered_map<string, double>>& videoC
 
 	vector<pair<string, double>> distanceToClass(class_count);
 	sortDistances(distanceToClass, avg_frame_dists);
+	bool correctlyRecognized=true;
 	for (int i = 0; i < models_count; ++i) {
 		positions.insert(distanceToClass[i].first);
-		//cout << distanceToClass[i].first << ' ' << distanceToClass[i].second << endl;
+		/*if (i!=0 && distanceToClass[i].first == correctClassName)
+			correctlyRecognized = false;*/
 	}
-
+	if (!correctlyRecognized) {
+		cout << "incorrect recognition of " << correctClassName << '\n';
+		for (int i = 0; i < models_count; ++i) {
+			cout << distanceToClass[i].first << ' ' << distanceToClass[i].second << endl;
+		}
+	}
 	for (auto& person : videoClassDistances[0])
 		avg_frame_dists[person.first] = 0;
 	for (int i = 0; i < frames_count; ++i) {
@@ -512,7 +581,8 @@ int MLDistClassifier::processVideo(vector<unordered_map<string, double>>& videoC
 				double tmp = (expected_dist - cur_dist)*(expected_dist - cur_dist) / (4 * expected_dist);
 				log_prob += tmp;
 			}
-			//cout << name << '\t' << videoClassDistances[i][name]<<'\t'<<log_prob << '\t' << log_weight<<'\t'<< (videoClassDistances[i][name] + log_prob*log_weight)<<endl;
+			if (!correctlyRecognized)
+				cout << name << '\t' << videoClassDistances[i][name]<<'\t'<<log_prob << '\t' << log_weight<<'\t'<< (videoClassDistances[i][name] + log_prob*log_weight)<<endl;
 			current_frame[name] = exp(-DISTANCE_WEIGHT*(videoClassDistances[i][name] + log_prob*log_weight));
 			sum += current_frame[name];
 		}
@@ -523,10 +593,13 @@ int MLDistClassifier::processVideo(vector<unordered_map<string, double>>& videoC
 
 	sortDistances(distanceToClass, avg_frames);
 
-	/*cout << "after regularization\n";
-	for (int i = 0; i < models_count; ++i) {
-	cout << distanceToClass[i].first << ' ' << distanceToClass[i].second << '\t' << closestFaces[distanceToClass[i].first] << endl;
-	}*/
+	if (!correctlyRecognized) 
+	{
+		cout << "after regularization\n";
+		for (int i = 0; i < models_count; ++i) {
+			cout << distanceToClass[i].first << ' ' << distanceToClass[i].second << '\t' << closestFaces[distanceToClass[i].first] << endl;
+		}
+	}
 	int res = 0;
 	for (; res < distanceToClass.size() && distanceToClass[res].first != correctClassName; ++res)
 		;
@@ -711,7 +784,11 @@ void SequentialClassifier::train(MapOfFaces& totalImages, const vector<string>& 
 #else
 			std::vector<float>& features = face->getFeatureVector();
 #endif
+#ifdef USE_DNN_FEATURES
 			new_database[images_no]=new FaceImage(face->fileName,face->personName,features,false);
+#else
+			new_database[images_no] = 0;
+#endif
 			class_indices[images_no] = class_count;
 			
 			++images_no;
@@ -860,7 +937,7 @@ int SequentialClassifier::processVideo(vector<unordered_map<string, double>>& vi
 
 
 
-#define TRAIN_RATE 0.8
+//#define TRAIN_RATE 0.8
 #ifdef TRAIN_RATE
 #define TEST_COUNT 3
 #else
@@ -1002,25 +1079,27 @@ void testVideoRecognition() {
 
 	vector<Classifier*> classifiers;
 
-	//classifiers.push_back(new BruteForceClassifier(FusionMethod::MEAN_DIST));
+	classifiers.push_back(new BruteForceClassifier(FusionMethod::MEAN_DIST));
 #ifndef AGGREGATE_VIDEOS
-	//classifiers.push_back(new BruteForceClassifier(FusionMethod::MAP)); 
+	classifiers.push_back(new BruteForceClassifier(FusionMethod::MAP)); 
 	//classifiers.push_back(new BruteForceClassifier(FusionMethod::MAX_POSTERIOR));
 #endif
-	//classifiers.push_back(new SVMClassifier());
-#if 0
+#if DISTANCE==EUC
+	classifiers.push_back(new SVMClassifier());
+#endif
+#if 1
 	//test_complex_classifier(totalImages, videos, class2no);
-	vector<int> regs({ 8 });// 8, 80, 100, 120, 64, 40, 28, 4, 16});
+	vector<int> regs({ 8, 4 });// 8, 80, 100, 120, 64, 40, 28, 4, 16});
 	for (int reg : regs) {
-	//for (double reg = 7; reg <= 9; reg += 0.2) {
-		//for (int M = 1; M <= 256; M *= 2) 
+	//for (double reg = 3.5; reg <= 5.5; reg += 0.5) {
+		//for (int M = 2; M <= 16; M *= 2) 
 		int M = 16;
 		{
 			classifiers.push_back(new MLDistClassifier(reg, M));
 		}
 	}
 #endif
-#if 1
+#if 0
 	PCA pca;
 	train_pca(totalImages, pca);
 	//for (double th = 0.5; th <= 0.9; th += 0.1)
@@ -1050,19 +1129,95 @@ void testVideoRecognition() {
 	}
 }
 
+
+
 void testRecognitionOfMultipleImages() {
 	//srand(13);
 	MapOfFaces totalImages, faceImages, testImages;
 	loadFaces(totalImages);
+#if 1
+	ifstream ifs(BASE_DIR + "lfw_ytf_classes.txt");
+	vector<string> valid_classes;
+	while (ifs) {
+		string class_name;
+		if (!getline(ifs, class_name))
+			break;
+		valid_classes.push_back(class_name);
+	}
+	ifs.close();
+	vector<string> dbNames;
+	for (auto keyValue : totalImages) {
+		dbNames.push_back(keyValue.first);
+	}
+	std::sort(valid_classes.begin(), valid_classes.end());
+	std::sort(dbNames.begin(), dbNames.end());
+
+	vector<string> listToRemove;
+	std::set_difference(dbNames.begin(), dbNames.end(), valid_classes.begin(), valid_classes.end(), back_inserter(listToRemove));
+	for (string needToRemove : listToRemove) {
+		totalImages.erase(needToRemove);
+	}
+	cout << "after removal of non YTF faces:" << totalImages.size() << endl;
+#elif 0
+	vector<string> dbNames;
+	dbNames.reserve(totalImages.size());
+	for (auto keyValue : totalImages) {
+		dbNames.push_back(keyValue.first);
+	}
+
+	MapOfVideos videos;
+	loadVideos(videos);
+
+	vector<string> videoNames;
+	videoNames.reserve(videos.size());
+	for (auto keyValue : videos) {
+		videoNames.push_back(keyValue.first);
+	}
+
+	vector<string> commonNames(videos.size());
+	sort(videoNames.begin(), videoNames.end());
+	sort(dbNames.begin(), dbNames.end());
+	auto it = std::set_intersection(videoNames.begin(), videoNames.end(), dbNames.begin(), dbNames.end(), commonNames.begin());
+	commonNames.resize(it - commonNames.begin());
+
+	cout << "still names size=" << dbNames.size() << " video names size=" << videoNames.size() << " common names size=" << commonNames.size();
+	print_endl;
+
+	vector<string> listToRemove;
+	std::set_symmetric_difference(videoNames.begin(), videoNames.end(), dbNames.begin(), dbNames.end(), back_inserter(listToRemove));
+	for (string needToRemove : listToRemove) {
+		totalImages.erase(needToRemove);
+	}
+	ofstream ofs(BASE_DIR + "lfw_ytf_classes.txt");
+	for (auto& person : totalImages)
+		ofs << person.first << endl;
+	ofs.close();
+#endif
 	
+	MLDistClassifier::image_map img_map;
+	int ind = 0;
+	for (auto& person : totalImages) {
+		for (auto& face : person.second) {
+			img_map.insert(make_pair(face, ind));
+			++ind;
+		}
+	}
 	MLDistClassifier::distance_map dist_map;
+	int num_faces = img_map.size();
+	dist_map.resize(num_faces);
+	for(int i=0;i<num_faces;++i)
+		dist_map[i].resize(num_faces);
+	int ind1 = 0;
 	for (auto& person1 : totalImages) {
 		for (auto& face1 : person1.second) {
+			int ind2 = 0;
 			for (auto& person2 : totalImages) {
 				for (auto& face2 : person2.second) {
-					dist_map[face1][face2] = face1->distance(face2);
+					dist_map[ind1][ind2] = face1->distance(face2);
+					++ind2;
 				}
 			}
+			++ind1;
 		}
 	}
 	cout << " distance map computed\n";
@@ -1072,16 +1227,23 @@ void testRecognitionOfMultipleImages() {
 	for (auto& image : totalImages)
 	class_names.push_back(image.first);
 
+	vector<BruteForceClassifier*> classifiers;
+	classifiers.push_back(new BruteForceClassifier(FusionMethod::MEAN_DIST));
+	for (int reg = 30; reg <= 45; reg += 5)
+	//int reg = 60;
+		classifiers.push_back(new MLDistClassifier(reg, 16, &dist_map, &img_map));
+	int num_of_classifiers = classifiers.size();
+	
 	const int FRAMES_COUNT = 1;
-
 	const int TESTS = 10;
-	double totalTestsErrorRate = 0, errorRateVar = 0;
-	BruteForceClassifier* classifier = new MLDistClassifier(8,16,&dist_map);
+	vector<double> totalTestsErrorRates(num_of_classifiers), errorRateVars(num_of_classifiers);
+
+
 	for (int testCount = 0; testCount < TESTS; ++testCount) {
-		int errorsCount = 0;
+		vector<int> errorsCount (num_of_classifiers);
 		getTrainingAndTestImages(totalImages, faceImages, testImages);
-		
-		classifier->train(faceImages, class_names);
+		for (int clsId=0; clsId<num_of_classifiers;++clsId)
+			classifiers[clsId]->train(faceImages, class_names);
 
 		float bestDist, tmpDist;
 		string bestClass;
@@ -1099,7 +1261,7 @@ void testRecognitionOfMultipleImages() {
 						bestDist = 100000;
 						for (int j = 0; j < dbPersonImages.second.size(); ++j) {
 							//tmpDist = testPersonImages.second[ind]->distance(dbPersonImages.second[j]);
-							tmpDist = dist_map[testPersonImages.second[ind]][dbPersonImages.second[j]];
+							tmpDist = dist_map[img_map[testPersonImages.second[ind]]][img_map[dbPersonImages.second[j]]];
 							if (tmpDist < bestDist) {
 								bestDist = tmpDist;
 							}
@@ -1107,20 +1269,28 @@ void testRecognitionOfMultipleImages() {
 						classDistances.insert(make_pair(dbPersonImages.first, bestDist));
 					}
 				}
-				int res = classifier->processVideo(videoClassDistances, testPersonImages.first);
-				if (res != 0)
-					++errorsCount;
+				for (int clsId = 0; clsId < num_of_classifiers; ++clsId) {
+					int res = classifiers[clsId]->processVideo(videoClassDistances, testPersonImages.first);
+					if (res != 0)
+						++errorsCount[clsId];
+				}
 			}
 		}
 
 
-		double errorRate = 100.*errorsCount / test_count;
-		std::cout << "test=" << testCount << " test_count=" << test_count << " error=" << errorRate << std::endl;
-		totalTestsErrorRate += errorRate;
-		errorRateVar += errorRate * errorRate;
+		for (int clsId = 0; clsId < num_of_classifiers; ++clsId) {
+			double errorRate = 100.*errorsCount[clsId] / test_count;
+			std::cout << classifiers[clsId]->get_name()<< ": test=" << testCount << " test_count=" << test_count << " error=" << errorRate << std::endl;
+			totalTestsErrorRates[clsId] += errorRate;
+			errorRateVars[clsId] += errorRate * errorRate;
+		}
 
 	}
-	totalTestsErrorRate /= TESTS;
-	errorRateVar = sqrt((errorRateVar - totalTestsErrorRate * totalTestsErrorRate * TESTS) / (TESTS));
-	std::cout << "Avg error=" << totalTestsErrorRate << " Sigma=" << errorRateVar << endl;
+	for (int clsId = 0; clsId < num_of_classifiers; ++clsId) {
+		totalTestsErrorRates[clsId] /= TESTS;
+		errorRateVars[clsId] = sqrt((errorRateVars[clsId] - totalTestsErrorRates[clsId] * totalTestsErrorRates[clsId] * TESTS) / (TESTS));
+		std::cout << classifiers[clsId]->get_name() << ": Avg error=" << totalTestsErrorRates[clsId] << " Sigma=" << errorRateVars[clsId] << endl;
+	}
+	for (int clsId = 0; clsId<num_of_classifiers; ++clsId)
+		delete classifiers[clsId];
 }

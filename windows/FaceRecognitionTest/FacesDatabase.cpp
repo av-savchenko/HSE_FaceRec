@@ -116,7 +116,7 @@ vector<float>  FacesDatabase::pyramidThresholds;
 const double pyramid_scale = //1.5;
 							2;
 
-FacesDatabase::FacesDatabase(vector<FaceImage*>& faces)
+FacesDatabase::FacesDatabase(std::vector<FaceImage*>& faces)
 {
 	threadPool.SetThreadpoolMax(8);
 	const int PYRAMID_LEVELS =

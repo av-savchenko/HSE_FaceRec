@@ -110,10 +110,10 @@ void loadFaces(MapOfFaces& dbImages){
 	if (ifs){
 		while (ifs){
 			FaceImage* face = FaceImage::readFaceImage(ifs);
-			if (dbImages.find(face->personName) == dbImages.end()){
-				dbImages.insert(std::make_pair(face->personName, std::vector<FaceImage*>()));
+			if (dbImages.find(face->person_name) == dbImages.end()){
+				dbImages.insert(std::make_pair(face->person_name, std::vector<FaceImage*>()));
 			}
-			std::vector<FaceImage*>& currentDirFaces = dbImages[face->personName];
+			std::vector<FaceImage*>& currentDirFaces = dbImages[face->person_name];
 			currentDirFaces.push_back(face);
 		}
 		ifs.close();
@@ -125,30 +125,84 @@ void loadFaces(MapOfFaces& dbImages){
 	//ofstream ofs("dnn_vgg_features.bin");
 	if (ifs){
 		int total_count = 0;
-		while (ifs){
-			std::string fileName, personName, feat_str;
-			if (!getline(ifs, fileName))
+#ifdef USE_MEDIA_ID
+		vector<float> avg_features(FEATURES_COUNT);
+		string prev_media_id, prev_person_name,prev_file_name;
+		int num_of_frames_in_media = 0;
+#endif
+		std::string file_name, person_name, feat_str;
+		while (ifs) {
+			if (!getline(ifs, file_name))
 				break;
-			if (!getline(ifs, personName))
+			if (!getline(ifs, person_name))
 				break;
 			if (!getline(ifs, feat_str))
 				break;
-			//cout << fileName << ' ' << personName << '\n';
-
+			//cout << file_name << ' ' << person_name << '\n';
 			istringstream iss(feat_str);
 			vector<float> features(FEATURES_COUNT);
 			for (int i = 0; i < FEATURES_COUNT; ++i)
 				iss >> features[i];
 
-			if (dbImages.find(personName) == dbImages.end()){
-				dbImages.insert(std::make_pair(personName, std::vector<FaceImage*>()));
+			if (dbImages.find(person_name) == dbImages.end()) {
+				dbImages.insert(std::make_pair(person_name, std::vector<FaceImage*>()));
 			}
-			std::vector<FaceImage*>& currentDirFaces = dbImages[personName];
-			currentDirFaces.push_back(new FaceImage(fileName, personName, features));
+
+#ifdef USE_MEDIA_ID
+			size_t slash_ind = file_name.rfind("\\");
+			size_t dot_ind = file_name.rfind(".");
+			size_t underscore_ind = file_name.rfind("_");
+			string media_id = "";
+			if (slash_ind != string::npos) {
+				size_t end_ind = dot_ind;
+				if (underscore_ind != string::npos && underscore_ind > slash_ind)
+					end_ind = underscore_ind;
+				media_id = file_name.substr(slash_ind + 1, end_ind - slash_ind - 1);
+			}
+			//cout << prev_file_name << ' ' << media_id << ' '<< prev_media_id<<' '<< num_of_frames_in_media<<'\n';
+			if (prev_person_name != person_name || prev_media_id != media_id) {
+				if (num_of_frames_in_media > 0) {
+					for (int i = 0; i < FEATURES_COUNT; ++i) {
+						avg_features[i] /= num_of_frames_in_media;
+					}
+					std::vector<FaceImage*>& currentDirFaces = dbImages[prev_person_name];
+					currentDirFaces.push_back(new FaceImage(prev_file_name, prev_person_name, avg_features));
+					for (int i = 0; i < FEATURES_COUNT; ++i) {
+						avg_features[i] = 0;
+					}
+					num_of_frames_in_media = 0;
+					++total_count;
+				}
+				prev_media_id=media_id;
+				prev_person_name = person_name;
+				prev_file_name = file_name;
+			}
+			
+			++num_of_frames_in_media;
+			for (int i = 0; i < FEATURES_COUNT; ++i) {
+				avg_features[i] += features[i];
+			}
+#else
+			std::vector<FaceImage*>& currentDirFaces = dbImages[person_name];
+			currentDirFaces.push_back(new FaceImage(file_name, person_name, features));
 			//currentDirFaces.back()->writeFaceImage(ofs);
 			++total_count;
+#endif
+			/*if (total_count >= 3000)
+				break;*/
 		}
 		ifs.close();
+#ifdef USE_MEDIA_ID
+		//cout << " end "<<prev_file_name << ' ' << media_id << ' ' << prev_media_id << ' ' << num_of_frames_in_media << '\n';
+		if (num_of_frames_in_media > 0) {
+			for (int i = 0; i < FEATURES_COUNT; ++i) {
+				avg_features[i] /= num_of_frames_in_media;
+			}
+			std::vector<FaceImage*>& currentDirFaces = dbImages[prev_person_name];
+			currentDirFaces.push_back(new FaceImage(prev_file_name, prev_person_name, avg_features));
+			++total_count;
+		}
+#endif
 		read_image_files = false;
 		cout << "total size=" << dbImages.size() << " totalImages=" << total_count<<endl;
 		removeSingleImages(dbImages);
