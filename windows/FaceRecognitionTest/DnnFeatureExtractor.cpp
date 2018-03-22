@@ -23,6 +23,10 @@ const char* PROTO_FILE = "D:\\src_code\\DNN_models\\vggface\\VGG_FACE_predict.pr
 const char* PROTO_MODEL = "D:\\src_code\\DNN_models\\vggface\\VGG_FACE.caffemodel";
 #elif 1
 const char* FEATURE_LAYER = "pool5/7x7_s1";
+const char* PROTO_FILE = "D:\\src_code\\DNN_models\\senet50_ft_caffe\\senet50_predict.prototxt";
+const char* PROTO_MODEL = "D:\\src_code\\DNN_models\\senet50_ft_caffe\\senet50_ft.caffemodel";
+#elif 1
+const char* FEATURE_LAYER = "pool5/7x7_s1";
 const char* PROTO_FILE = "D:\\src_code\\DNN_models\\resnet50_ft_caffe\\resnet50_predict.prototxt";
 const char* PROTO_MODEL = "D:\\src_code\\DNN_models\\resnet50_ft_caffe\\resnet50_ft.caffemodel";
 #elif 1

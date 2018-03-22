@@ -269,6 +269,58 @@ method ML distances reg=8 analyzed_models_count=16 average accuracy=97.96954
 
 
 
+vgg2_senet
+Euclidean:
+NN:BF 0 video error rate=4.06977 (49 out of 1,204) recall=95.70777 avg time=9.90507(ms) prev time=75.39867
+method BF 0 average accuracy=95.93023
+MAP (1000): BF 1 video error rate=3.65449 (44 out of 1,204) recall=96.32112 avg time=9.54948(ms) prev time=72.69186
+method BF 1 average accuracy=96.34551
+SVM: video error rate=4.73422 (57 out of 1,204) recall=95.25837 avg time=6.18843(ms) prev time=47.10714
+method SVM average accuracy=95.26578
+proposed (1000):ML distances reg=8 analyzed_models_count=16 video error rate=3.23920 (39 out of 1,204) recall=96.79297 avg time=10.34970(ms) prev time=78.78323
+method ML distances reg=8 analyzed_models_count=16 average accuracy=96.76080
+
+
+equal face width and height:
+NN:BF 0 video error rate=2.19966 (26 out of 1,182) recall=97.97147 avg time=9.18699(ms) prev time=68.21066
+method BF 0 average accuracy=97.80034
+MAP (1000): BF 1 video error rate=1.94585 (23 out of 1,182) recall=98.25663 avg time=9.21183(ms) prev time=68.39510
+method BF 1 average accuracy=98.05415
+SVM: SVM video error rate=2.70728 (32 out of 1,182) recall=97.56408 avg time=6.48268(ms) prev time=48.13198
+method SVM average accuracy=97.29272
+proposed (1000):ML distances reg=8 analyzed_models_count=16 video error rate=1.94585 (23 out of 1,182) recall=98.25663 avg time=9.37386(ms) prev time=69.59814
+method ML distances reg=8 analyzed_models_count=16 average accuracy=98.05415
+
+
+
+
+chi-squared:
+NN:BF 0 video error rate=3.90365 (47 out of 1,204) recall=95.77736 avg time=12.75188(ms) prev time=97.06894
+method BF 0 average accuracy=96.09634
+MAP (10000): BF 1 video error rate=3.48837 (42 out of 1,204) recall=96.22286 avg time=11.96945(ms) prev time=91.11295
+method BF 1 average accuracy=96.51163
+proposed (10000):ML distances reg=4 analyzed_models_count=16 video error rate=3.32226 (40 out of 1,204) recall=96.48151 avg time=11.44528(ms) prev time=87.12292
+method ML distances reg=4 analyzed_models_count=16 average accuracy=96.67774
+
+equal face width and height:
+NN:BF 0 video error rate=1.94585 (23 out of 1,182) recall=98.24679 avg time=10.45624(ms) prev time=77.63452
+method BF 0 average accuracy=98.05415
+MAP (1000): BF 1 video error rate=1.77665 (21 out of 1,182) recall=98.43362 avg time=10.92263(ms) prev time=81.09729
+method BF 1 average accuracy=98.22335
+proposed (1000):method ML distances reg=8 analyzed_models_count=16 video error rate=1.86125 (22 out of 1,182) recall=98.31194 avg time=10.95123(ms) prev time=81.30965
+method ML distances reg=8 analyzed_models_count=16 average accuracy=98.13875
+
+after read from txt
+method BF 0 video error rate=2.03046 (24 out of 1,182) recall=98.15830 avg time=9.60711(ms) prev time=71.32995
+method BF 0 average accuracy=97.96954 total time (ms)=9.60711
+
+method BF 1 video error rate=1.86125 (22 out of 1,182) recall=98.34512 avg time=10.47846(ms) prev time=77.79949
+method BF 1 average accuracy=98.13875
+
+method ML distances reg=2 analyzed_models_count=16 video error rate=1.86125 (22 out of 1,182) recall=98.34512 avg time=10.81768(ms) prev time=80.31811
+method ML distances reg=2 analyzed_models_count=16 average accuracy=98.13875
+
+
 LBPH
 Euclidean
 NN:video error rate=75.831 (913 out of 1,204) recall=22.677
@@ -1497,6 +1549,63 @@ M=256: 22.577 (757 out of 3,353) recall=75.298 avg time=55.649(ms)
 
 
 
+
+senet (vgg2)
+YTF:
+NN: BF 0 video error rate=24.00835 (805 out of 3,353) recall=74.30040 avg time=15.08385(ms) prev time=280.01611
+method BF 0 average accuracy=75.99165
+MAP:BF 1 video error rate=23.82941 (799 out of 3,353) recall=74.62555 avg time=15.14848(ms) prev time=281.21591
+method BF 1 average accuracy=76.17059
+
+proposed (1000):
+reg=4 analyzed_models_count=16 video error rate=23.59081 (791 out of 3,353) recall=74.74093 avg time=18.97751(ms) average accuracy=76.40919 total time (ms)=18.97751
+reg=8 analyzed_models_count=16 video error rate=23.38205 (784 out of 3,353) recall=74.95070 avg time=17.93935(ms) average accuracy=76.61795 total time (ms)=17.93935
+reg=16 analyzed_models_count=16 video error rate=23.11363 (775 out of 3,353) recall=75.12901 avg time=20.53556(ms) average accuracy=76.88637
+reg=28 analyzed_models_count=16 video error rate=22.54697 (756 out of 3,353) recall=75.86323 avg time=19.63632(ms) average accuracy=77.45303 total time (ms)=19.63632
+reg=40 analyzed_models_count=16 video error rate=22.36803 (750 out of 3,353) recall=75.99853 avg time=18.02850(ms) average accuracy=77.63197 total time (ms)=18.02850
+reg=64 analyzed_models_count=16 video error rate=22.15926 (743 out of 3,353) recall=76.18733 avg time=19.92101(ms) average accuracy=77.84074 total time (ms)=19.92101
+reg=80 analyzed_models_count=16 video error rate=22.15926 (743 out of 3,353) recall=76.25341 avg time=16.83281(ms) average accuracy=77.84074
+reg=100 analyzed_models_count=16 video error rate=21.95049 (736 out of 3,353) recall=76.43172 avg time=17.66523(ms) average accuracy=78.04951
+reg=120 analyzed_models_count=16 video error rate=22.15926 (743 out of 3,353) recall=76.17265 avg time=17.44310(ms) average accuracy=77.84074
+
+reg=100 analyzed_models_count=1 video error rate=24.00835 (805 out of 3,353) recall=74.30040 average accuracy=75.99165 total time (ms)=17.85128
+reg=100 analyzed_models_count=2 video error rate=22.51715 (755 out of 3,353) recall=75.70170 avg time=16.25777(ms) average accuracy=77.48285 total time (ms)=16.25777
+reg=100 analyzed_models_count=4 video error rate=22.03996 (739 out of 3,353) recall=76.40025 avg time=16.15839(ms) average accuracy=77.96004 total time (ms)=16.15839
+reg=100 analyzed_models_count=8 video error rate=22.24873 (746 out of 3,353) recall=76.08034 average accuracy=77.75127 total time (ms)=16.37166
+reg=100 analyzed_models_count=16 video error rate=21.95049 (736 out of 3,353) recall=76.43172 average accuracy=78.04951 total time (ms)=17.47217
+reg=100 analyzed_models_count=32 video error rate=21.89084 (734 out of 3,353) recall=76.54185 average accuracy=78.10915 total time (ms)=19.75055
+reg=100 analyzed_models_count=64 video error rate=21.86102 (733 out of 3,353) recall=76.54709 average accuracy=78.13898 total time (ms)=24.24111
+reg=100 analyzed_models_count=128 video error rate=21.89084 (734 out of 3,353) recall=76.48941 avg time=32.38466(ms) average accuracy=78.10915
+
+
+chi-squared:
+NN: BF 0 video error rate=23.56099 (790 out of 3,353) recall=74.59408 avg time=18.10169(ms) prev time=336.03937
+method BF 0 average accuracy=76.43901
+MAP (1000): BF 1 video error rate=23.59081 (791 out of 3,353) recall=74.56262 avg time=17.11484(ms) prev time=317.71936
+method BF 1 average accuracy=76.40919
+
+proposed (1000):
+reg=4 analyzed_models_count=16 video error rate=22.93469 (769 out of 3,353) recall=75.24439 average accuracy=77.06532 total time (ms)=24.17227
+reg=8 analyzed_models_count=16 video error rate=22.60662 (758 out of 3,353) recall=75.71114 average accuracy=77.39338 total time (ms)=20.17600
+reg=16 analyzed_models_count=16 video error rate=22.15926 (743 out of 3,353) recall=76.18523 average accuracy=77.84074
+reg=28 analyzed_models_count=16 video error rate=22.01014 (738 out of 3,353) recall=76.53451 average accuracy=77.98986 total time (ms)=24.36385
+reg=40 analyzed_models_count=16 video error rate=21.92067 (735 out of 3,353) recall=76.56073 average accuracy=78.07933 total time (ms)=19.87845
+reg=64 analyzed_models_count=16 video error rate=22.57680 (757 out of 3,353) recall=75.99643 average accuracy=77.42320 total time (ms)=23.13249
+reg=80 analyzed_models_count=16 video error rate=22.66627 (760 out of 3,353) recall=75.92301 avg time=17.91172(ms) average accuracy=77.33373
+reg=100 analyzed_models_count=16 video error rate=23.08381 (774 out of 3,353) recall=75.59891 avg time=17.86815(ms) average accuracy=76.91619
+reg=120 analyzed_models_count=16 video error rate=23.76976 (797 out of 3,353) recall=75.07762 avg time=18.18046(ms) average accuracy=76.23024
+
+
+reg=40 analyzed_models_count=1 video error rate=23.56099 (790 out of 3,353) recall=74.59408 average accuracy=76.43901 total time (ms)=18.12770
+reg=40 analyzed_models_count=2 video error rate=22.39785 (751 out of 3,353) recall=75.87267 average accuracy=77.60215 total time (ms)=18.14885
+reg=40 analyzed_models_count=4 video error rate=22.01014 (738 out of 3,353) recall=76.48941 average accuracy=77.98986 total time (ms)=18.32239
+reg=40 analyzed_models_count=8 video error rate=21.98032 (737 out of 3,353) recall=76.52402 average accuracy=78.01968 total time (ms)=18.88364
+reg=40 analyzed_models_count=16 video error rate=21.92067 (735 out of 3,353) recall=76.56073 average accuracy=78.07933 total time (ms)=20.32968
+reg=40 analyzed_models_count=32 video error rate=21.98032 (737 out of 3,353) recall=76.52926 average accuracy=78.01968 total time (ms)=22.70746
+reg=40 analyzed_models_count=64 video error rate=21.98032 (737 out of 3,353) recall=76.52926 average accuracy=78.01968 total time (ms)=25.82275
+reg=40 analyzed_models_count=128 video error rate=21.98032 (737 out of 3,353) recall=76.52926 average accuracy=78.01968 total time (ms)=32.32785
+
+
 IJB-A
 NN:
 total_videos=2043 1NN=75.722% (1547)  5NN=86.5884% (1769)  10NN=90.9447% (1858)
@@ -1585,6 +1694,23 @@ proposed (*1, dw=10000):total_videos=3353 1NN=55.7113% (1868)  5NN=70.1461% (235
 
 
 LFW:
+vgg2_senet
+Euclidean:
+correct (596):
+BF 0: Avg error=1.50348 Sigma=0.34621
+ML distances reg=10 analyzed_models_count=16: Avg error=1.49021 Sigma=0.33764
+ML distances reg=20 analyzed_models_count=16: Avg error=1.49353 Sigma=0.32485
+ML distances reg=30 analyzed_models_count=16: Avg error=1.50348 Sigma=0.32521
+
+chi-squared:
+BF 0: Avg error=1.44374 Sigma=0.39137
+ML distances reg=10 analyzed_models_count=16: Avg error=1.41719 Sigma=0.36419
+ML distances reg=20 analyzed_models_count=16: Avg error=1.43711 Sigma=0.36298
+ML distances reg=30 analyzed_models_count=16: Avg error=1.42715 Sigma=0.34555
+ML distances reg=40 analyzed_models_count=16: Avg error=1.41387 Sigma=0.34721
+ML distances reg=50 analyzed_models_count=16: Avg error=1.42715 Sigma=0.33879
+
+
 vgg2_resnet
 Euclidean:
 correct (596):
@@ -1701,6 +1827,20 @@ ML distances reg=15 analyzed_models_count=16: Avg error=14.21383 Sigma=0.44933
 
 
 lfw faces equal width height:
+vgg2_senet
+Euclidean:
+correct (596):
+BF 0: Avg error=2.12745 Sigma=0.46191
+ML distances reg=10 analyzed_models_count=16: Avg error=2.12413 Sigma=0.45118
+ML distances reg=20 analyzed_models_count=16: Avg error=2.12745 Sigma=0.45591
+
+chi-squared:
+BF 0: Avg error=2.11085 Sigma=0.45826
+ML distances reg=10 analyzed_models_count=16: Avg error=2.10422 Sigma=0.44952
+ML distances reg=20 analyzed_models_count=16: Avg error=2.08430 Sigma=0.46484
+ML distances reg=30 analyzed_models_count=16: Avg error=2.08762 Sigma=0.49550
+ML distances reg=40 analyzed_models_count=16: Avg error=2.10090 Sigma=0.48166
+
 vgg2_resnet
 correct (596):
 BF 0: Avg error=2.61865 Sigma=0.67391
