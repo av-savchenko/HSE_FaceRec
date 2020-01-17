@@ -55,7 +55,7 @@ int loadImages(ImagesDatabase& imagesDb, std::string features_file, unordered_ma
                             break;
                     if (!getline(ifs, feat_str))
                             break;
-                    //cout << fileName.c_str() << ' ' << personName.c_str() << '\n';
+                    //cout << fileName.c_str() << ' ' << personName.c_str() << endl;
                     personName.erase(0, personName.find_first_not_of(" \t\n\r\f\v\r\n"));
 #ifdef USE_CALTECH
                     if(personName.find("BACKGROUND_Google")!=string::npos ||
@@ -287,7 +287,7 @@ void extractPCA(const ImagesDatabase& orig_database, ImagesDatabase& new_databas
                 }
         }
 
-        PCA pca(mat_features, Mat(), CV_PCA_DATA_AS_ROW, 0);
+        PCA pca(mat_features, Mat(), PCA::DATA_AS_ROW, 0);
         Mat mat_projection_result=pca.project(mat_features);
         qDebug() << "rows="<<mat_projection_result.rows << " cols=" << mat_projection_result.cols;
 

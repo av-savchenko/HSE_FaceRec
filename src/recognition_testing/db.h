@@ -3,12 +3,12 @@
 
 //#define USE_LCNN
 #ifndef USE_LCNN
-#define USE_VGG
+//#define USE_VGG
 #endif
 
-#define USE_LFW
+//#define USE_LFW
 //#define USE_CASIA
-//#define USE_CALTECH
+#define USE_CALTECH
 
 static const char* PCA_CASIA_FEATURES_FILE_NAME ="casia_dnn_features_my_best_pca.txt";
 
@@ -30,7 +30,18 @@ static const char* PCA_FEATURES_FILE_NAME =
         //"birds_vgg19_fc6.txt";
         //"dogs_dnn_vgg19_features_mean_fc7.txt";
 #else
-        "dnn_101_googlenet.txt";
+        //"dnn_101_googlenet.txt";
+        //"101_ObjectCategories_inception_v3.txt";
+        //"101_ObjectCategories_inception_resnet_v2.txt";
+        //"101_ObjectCategories_efficientnet-b0.txt";
+        "101_ObjectCategories_efficientnet-b5.txt";
+        //"101_ObjectCategories_efficientnet-b7.txt";
+
+        //"dogs_all_efficientnet-b7.txt";
+        //"dogs_all_efficientnet-b0.txt";
+        //"dogs_all_inception_v3.txt";
+        //"dogs_all_inception_resnet_v2.txt";
+
         //"dnn_256_googlenet.txt";
         //"birds_googlenet.txt";
         //"dogs_dnn_googlenet.txt";
@@ -57,7 +68,6 @@ static const char* FEATURES_FILE_NAME =
 PCA_FEATURES_FILE_NAME;
 #endif
 
-
 const double FRACTION =
 #ifdef USE_CALTECH
         0.03;//0.1;
@@ -66,14 +76,17 @@ const double FRACTION =
 #else
         0.5;//0.05;
 #endif
-const int FEATURES_COUNT =
 #ifdef USE_LCNN
-256;
+#define FEATURES_COUNT 256
 #else
 #ifdef USE_VGG
-        4096;
+#define FEATURES_COUNT 4096
 #else
-        1024;
+#define FEATURES_COUNT 2048
+//#define FEATURES_COUNT 1536
+//#define FEATURES_COUNT 1024
+//#define FEATURES_COUNT 1280
+//#define FEATURES_COUNT 2560
 #endif
 #endif
 

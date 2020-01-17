@@ -54,7 +54,9 @@ void testANN(){
 
         vector<ClassificationMethod*> methods;
         methods.push_back(new FlannMethod(dbImages));
+#ifdef USE_NMSLIB
         methods.push_back(new NmslibMethod(dbImages));
+#endif
         methods.push_back(new DirectedEnumeration(dbImages));
         for (double ratio = 0.025; ratio <= 0.5/*1.001*/; ratio += 0.025)
         {
@@ -193,6 +195,7 @@ int FlannMethod::recognize(ImageInfo& testImage){
     return bestInd;
 }
 
+#ifdef USE_NMSLIB
 //methods from NMSLib
 using namespace similarity;
 NmslibMethod::NmslibMethod(std::vector<ImageInfo>& dbImages):ClassificationMethod("nmslib",dbImages)
@@ -261,7 +264,7 @@ int NmslibMethod::recognize(ImageInfo& testImage){
     delete queryObj;
     return bestInd;
 }
-
+#endif
 
 //directed enumeration/maximal-likelihood ANN methods
 #define PIVOT

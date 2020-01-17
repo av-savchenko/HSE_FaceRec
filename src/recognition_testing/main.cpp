@@ -15,8 +15,10 @@ int main(int argc, char *argv[])
     //TODO!!! Change to the correct directory
     //qDebug()<<QDir::current();
     //QDir::setCurrent(QStringLiteral("/Users/avsavchenko/Documents/my_soft/github/recognition_testing/precomputed_features"));
-    QDir::setCurrent(QStringLiteral("../src/recognition_testing/precomputed_features"));
-#if 1
+    //QDir::setCurrent(QStringLiteral("../src/recognition_testing/precomputed_features"));
+    QDir::setCurrent(QStringLiteral("../recognition_testing/precomputed_features"));
+    //qDebug()<<QDir::current();
+#if 0
     testRecognition();
 #elif 0
     testYTFRecognition();

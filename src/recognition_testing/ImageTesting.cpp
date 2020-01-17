@@ -45,7 +45,7 @@ private:
 
 protected:
     std::vector<ImageInfo>* pDbImages;
-    static string build_name(string prefix, int max_feats);
+    static string build_name(string prefix, int param);
 };
 #include <sstream>
 string Classifier::build_name(string prefix, int param){
@@ -442,7 +442,7 @@ void testRecognitionMethod(ImagesDatabase& totalImages, Classifier* classifier){
     print_endl;
     int num_of_classes = totalImages.size();
 
-    const int TESTS = 10;
+    const int TESTS = 2;
     std::vector<ImageInfo> dbImages, testImages;
     double total_time = 0;
     double totalTestsErrorRate = 0, errorRateVar = 0, totalRecall = 0;

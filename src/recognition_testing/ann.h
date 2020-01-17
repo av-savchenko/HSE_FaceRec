@@ -118,7 +118,9 @@ private:
     cvflann::Index<CURRENT_DISTANCE<float> > *flann_index;
 };
 
+//#define USE_NMSLIB
 
+#ifdef USE_NMSLIB
 #include "object.h"
 #include "space/space_vector_gen.h"
 #include "init.h"
@@ -152,4 +154,5 @@ private:
     similarity::Index<float>*   index;
     std::vector<float> queryData;
 };
+#endif // USE_NMSLIB
 #endif // ANN_H
