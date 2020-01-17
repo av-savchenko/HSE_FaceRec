@@ -676,62 +676,14 @@ void PNNFSClassifier::train()
     J=(int)ceil(pow(1.0*num_of_training_data/num_of_classes,1.0/3));//*2);
     //J=(int)ceil(pow(1.0*num_of_training_data/num_of_classes,1.0/3)*2);
     //J=(int)ceil(pow(1.0*num_of_training_data/num_of_classes,1.0/2)*2);
-#ifdef USE_CALTECH
-    //J*=2;
-#endif
     //J=num_of_training_data/(num_of_classes);
     const int min_J=3;//1;
     if(J<=min_J)
        J = min_J;
-#if defined (USE_LFW) && !defined(USE_CASIA)
-    J=2;
-#endif
 
     a.resize(num_of_classes*num_of_cont_features*(2*J+1));
     fill(a.begin(),a.end(),0);
-    //cout<<"J="<<J<<" a_size="<<a.size();
     for(size_t fi=0;fi<num_of_cont_features;++fi) {
-#if 0
-        double potential_weights[]={1.0,2.0,3.0};
-        double bestTotalError=DBL_MAX;
-        double bestW=0;
-        for(double w : potential_weights){
-            double totalError=0;
-            for(size_t i=0;i<num_of_classes;++i){
-                int num_errors=0;
-                for(size_t t=0;t<training_set[i].size();++t){
-                    vector<double> probabs(num_of_classes,0);
-                    double bestProbab=-DBL_MAX;
-                    int bestClass=-1;
-                    for(size_t c=0;c<num_of_classes;++c){
-                        for(size_t tc=0;tc<training_set[c].size();++tc){
-                            for(size_t j=0;j<J;++j){
-                                probabs[c]+=(J-j)*cos(w*PI*j*(tmp_dataset[training_set[i][t]].features[fi]-tmp_dataset[training_set[c][tc]].features[fi]));
-                            }
-                        }
-                        probabs[c]=0.5+probabs[c]/(J*(J+1));
-                        if(bestProbab<probabs[c]){
-                            bestProbab=probabs[c];
-                            bestClass=c;
-                        }
-                    }
-                    if(bestClass!=i){
-                        ++num_errors;
-                    }
-                }
-                if(num_errors>0)
-                    totalError+=num_errors;//error/num_errors
-            }
-            totalError/=num_of_classes;
-            if(totalError<bestTotalError){
-                bestTotalError=totalError;
-                bestW=w;
-            }
-        }
-        if(fi<0)
-            qDebug()<<fi<<' '<<bestW<<' '<<bestTotalError;
-        feature_weights[fi]=bestW;
-#endif
 
         for(size_t i=0;i<num_of_classes;++i){
             size_t model_ind=(fi*num_of_classes+i)*(2*J+1);
@@ -746,73 +698,7 @@ void PNNFSClassifier::train()
                     //cout<<"train coefs="<<a[model_ind+2*j+1]<<' '<<a[model_ind+2*j+2]<<' '<<j<<' '<<val<<' '<<training_set[i][t];
                 }
             }
-
         }
-#if 0
-        double totalError=0;
-        for(size_t i=0;i<num_of_classes;++i){
-            double error=0;
-            int num_errors=0;
-            for(size_t t=0;t<training_set[i].size();++t){
-                FEATURE_TYPE val=normalize(tmp_dataset[training_set[i][t]],fi);
-                vector<double> cos_vals(J),sin_vals(J);
-                cos_vals[0]=cos(PI*val);
-                sin_vals[0]=sin(PI*val);
-                for(size_t j=1;j<J;++j){
-                    cos_vals[j]=cos_vals[j-1]*cos_vals[0]-sin_vals[j-1]*sin_vals[0];
-                    sin_vals[j]=cos_vals[j-1]*sin_vals[0]+sin_vals[j-1]*cos_vals[0];
-                }
-                vector<double> probabs(num_of_classes);
-                double bestProbab=-DBL_MAX;
-                int bestClass=-1;
-                for(size_t c=0;c<num_of_classes;++c){
-                    size_t model_ind=(fi*num_of_classes+c)*(2*J+1);
-                    probabs[c]=a[model_ind];
-                    for(size_t j=0;j<J;++j){
-                        probabs[c]+=(a[model_ind+2*j+1]*cos_vals[j]+a[model_ind+2*j+2]*sin_vals[j]);
-                    }
-                    if(bestProbab<probabs[c]){
-                        bestProbab=probabs[c];
-                        bestClass=c;
-                    }
-                }
-                if(bestClass!=i){
-                    ++num_errors;
-                    error+=fastlog(bestProbab/probabs[i]);
-                }
-                if(fi<=10 && i<10){
-                    /*{
-                        size_t model_ind=(fi*num_of_classes+bestClass)*(2*J+1);
-                        ostringstream os;
-                        for(size_t tt=0;tt<training_set[bestClass].size();++tt)
-                            os<<tmp_dataset[training_set[bestClass][tt]].features[fi]<<' ';
-                        qDebug()<<os.str().c_str()<<' '<<a[model_ind+1]<<' '<<a[model_ind+2]<<' '<<a[model_ind+3]<<' '<<a[model_ind+4];
-                    }
-                    {
-                        size_t model_ind=(fi*num_of_classes+i)*(2*J+1);
-                        ostringstream os;
-                        for(size_t tt=0;tt<training_set[i].size();++tt)
-                            os<<tmp_dataset[training_set[i][tt]].features[fi]<<' ';
-                        qDebug()<<os.str().c_str()<<' '<<a[model_ind+1]<<' '<<a[model_ind+2]<<' '<<a[model_ind+3]<<' '<<a[model_ind+4];
-                    }*/
-                    {
-                        size_t model_ind=(fi*num_of_classes+i)*(2*J+1);
-                        for(size_t j=0;j<J;++j){
-                            qDebug()<<'('<<cos_vals[j]<<' '<<sin_vals[j]<<") "<<a[model_ind+2*j+1]<<' '<<a[model_ind+2*j+2];
-                        }
-                    }
-                    qDebug()<<"current "<<fi<<' '<<i<<' '<<tmp_dataset[training_set[i][t]].features[fi]<<' '<<bestClass<<' '<<probabs[i]<<' '<<bestProbab;
-                }
-            }
-            if(num_errors>0)
-                totalError+=num_errors;//error/num_errors
-            /*
-            if(fi<=10 && i<10)
-                qDebug()<<fi<<' '<<i<<' '<<error<<' '<<training_set[i].size()<<' '<<num_errors<<' '<<(1.0*error/num_errors);
-            */
-        }
-        qDebug()<<"total error="<<(totalError/num_of_classes);
-#endif
     }
 }
 
